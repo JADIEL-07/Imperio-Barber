@@ -1,4 +1,4 @@
-﻿services:
+services:
   postgres:
     image: postgres:16-alpine
     container_name: imperio-postgres
@@ -10,22 +10,12 @@
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./infra/postgres/init:/docker-entrypoint-initdb.d
-    networks:
-      - imperio-network
-
-  gateway:
-    image: nginx:alpine
-    container_name: imperio-gateway
-    restart: unless-stopped
-    ports:
-      - "8000:80"
-    volumes:
-      - ./infra/gateway/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - auth-service
-      - catalog-service
-      - booking-service
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - imperio-network
 
@@ -38,9 +28,10 @@
     environment:
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/auth_db
       - SESSION_SECRET=${SESSION_SECRET:-supersecretkey32charactersminimum!}
-      - ENVIRONMENT=development
+      - ENVIRONMENT=${ENVIRONMENT:-development}
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - imperio-network
 
@@ -53,9 +44,10 @@
     environment:
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/catalog_db
       - SESSION_SECRET=${SESSION_SECRET:-supersecretkey32charactersminimum!}
-      - ENVIRONMENT=development
+      - ENVIRONMENT=${ENVIRONMENT:-development}
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - imperio-network
 
@@ -70,9 +62,44 @@
       - SESSION_SECRET=${SESSION_SECRET:-supersecretkey32charactersminimum!}
       - CATALOG_SERVICE_URL=http://catalog-service:8000/catalog
       - AUTH_SERVICE_URL=http://auth-service:8000/auth
-      - ENVIRONMENT=development
+      - ENVIRONMENT=${ENVIRONMENT:-development}
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+      catalog-service:
+        condition: service_started
+      auth-service:
+        condition: service_started
+    networks:
+      - imperio-network
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: imperio-web
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=/api
+      - NEXT_PUBLIC_USE_MOCKS=false
+    networks:
+      - imperio-network
+
+  gateway:
+    build:
+      context: ./infra/gateway
+      dockerfile: Dockerfile
+    container_name: imperio-gateway
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "8000:80"
+    depends_on:
+      - web
+      - auth-service
+      - catalog-service
+      - booking-service
     networks:
       - imperio-network
 
