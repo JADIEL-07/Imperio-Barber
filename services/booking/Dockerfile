@@ -1,4 +1,4 @@
-﻿FROM python:3.12-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
@@ -13,4 +13,4 @@ COPY services/booking /app/services/booking
 
 WORKDIR /app/services/booking
 
-CMD ["uvicorn", "src.booking.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "src.booking.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips=*"]
