@@ -4,7 +4,7 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
-RUN npm ci || npm install --include=dev
+RUN npm ci || npm install
 
 # Stage 2: Builder
 FROM node:20-alpine AS builder
@@ -12,13 +12,12 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Build-time environment variables
+# Build-time environment variables for Next.js
 ARG NEXT_PUBLIC_API_URL=/api
 ARG NEXT_PUBLIC_USE_MOCKS=false
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_USE_MOCKS=$NEXT_PUBLIC_USE_MOCKS
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_ENV=production
 
 RUN npm run build
 
