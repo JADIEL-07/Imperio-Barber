@@ -1,0 +1,62 @@
+﻿services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: imperio-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d
+    networks:
+      - imperio-network
+
+  auth-service:
+    build:
+      context: ./services/auth
+      dockerfile: Dockerfile
+    container_name: imperio-auth
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/auth_db
+      - JWT_SECRET=${JWT_SECRET:-supersecretkey}
+    depends_on:
+      - postgres
+    networks:
+      - imperio-network
+
+  users-service:
+    build:
+      context: ./services/users
+      dockerfile: Dockerfile
+    container_name: imperio-users
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/users_db
+    depends_on:
+      - postgres
+    networks:
+      - imperio-network
+
+  orders-service:
+    build:
+      context: ./services/orders
+      dockerfile: Dockerfile
+    container_name: imperio-orders
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/orders_db
+    depends_on:
+      - postgres
+    networks:
+      - imperio-network
+
+volumes:
+  postgres_data:
+
+networks:
+  imperio-network:
+    driver: bridge
