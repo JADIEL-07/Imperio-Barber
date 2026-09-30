@@ -96,8 +96,6 @@ services:
     restart: unless-stopped
     expose:
       - "80"
-    ports:
-      - "${GATEWAY_PORT:-8080}:80"
     depends_on:
       - web
       - auth-service
