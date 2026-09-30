@@ -1,4 +1,4 @@
-﻿export interface Service {
+export interface Service {
   id: string;
   name: string;
   description: string;
@@ -48,4 +48,18 @@ export interface UpdateComboPayload {
   service_ids?: string[];
   price?: number;
   is_active?: boolean;
+}
+
+export interface PageResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface ApiErrorResponse {
+  error: {
+    code: string;
+    message: string;
+  };
 }

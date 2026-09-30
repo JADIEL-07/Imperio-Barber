@@ -1,11 +1,27 @@
-﻿import { Service } from "./catalog";
+import { Service } from "./catalog";
+
+export interface ServiceItem {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  duration: number;
+  badge?: string;
+  checked?: boolean;
+}
 
 export interface Barber {
   id: string;
   name: string;
-  phone: string;
-  is_active: boolean;
+  phone?: string;
+  is_active?: boolean;
   services?: Service[];
+  role?: string;
+  detail?: string;
+  rating?: number;
+  reviewsCount?: number;
+  location?: string;
+  imageUrl?: string;
 }
 
 export interface BarberSchedule {
@@ -66,6 +82,18 @@ export interface Appointment {
   total_price: number;
   status: AppointmentStatus;
   can_cancel: boolean;
+}
+
+export interface AppointmentRecord {
+  id: string;
+  bookingCode?: string;
+  barberName?: string;
+  serviceNames?: string[];
+  date?: string;
+  timeSlot?: string;
+  status?: string;
+  totalPrice?: number;
+  created_at?: string;
 }
 
 export interface CreateAppointmentPayload {

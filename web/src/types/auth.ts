@@ -1,4 +1,4 @@
-﻿export type UserRole = "admin" | "employee" | "client";
+export type UserRole = "admin" | "employee" | "client";
 
 export interface User {
   id: string;
@@ -40,4 +40,18 @@ export interface UpdateUserPayload {
   phone?: string;
   role?: UserRole;
   is_active?: boolean;
+}
+
+export interface PageResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface ApiErrorResponse {
+  error: {
+    code: string;
+    message: string;
+  };
 }
