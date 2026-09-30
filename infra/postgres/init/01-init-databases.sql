@@ -1,4 +1,4 @@
-﻿-- Inicialización de bases de datos independientes por servicio
+﻿-- Creación de bases de datos independientes para cada microservicio
 CREATE DATABASE auth_db;
-CREATE DATABASE users_db;
-CREATE DATABASE orders_db;
+CREATE DATABASE catalog_db;
+CREATE DATABASE booking_db;

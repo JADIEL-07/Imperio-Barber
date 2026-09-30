@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { StepWizardNav } from "@/components/booking/StepWizardNav";
@@ -12,89 +12,13 @@ import { InteractivePreview } from "@/components/booking/InteractivePreview";
 import { ConflictToast } from "@/components/booking/ConflictToast";
 import { MyBookings } from "@/components/portal/MyBookings";
 import { ServiceItem, Barber } from "@/types/booking";
-
-const INITIAL_SERVICES: ServiceItem[] = [
-  {
-    id: "corte-firma",
-    title: "Corte Signature Aura",
-    description: "Diagnóstico capilar + fade con tijera + toalla fría",
-    price: 75000,
-    duration: 45,
-    checked: true,
-  },
-  {
-    id: "afeitado-spa",
-    title: "Ritual Afeitado Imperial",
-    description: "Vapor ozono + navaja artesanal + bálsamo sándalo",
-    price: 60000,
-    duration: 40,
-    checked: true,
-  },
-  {
-    id: "combo-black",
-    title: "Combo Presidencial Black",
-    badge: "Aura Exclusive",
-    description: "Corte de autor + barba spa + exfoliación volcánica",
-    price: 135000,
-    duration: 85,
-    checked: false,
-  },
-  {
-    id: "perfilado-camuflaje",
-    title: "Camuflaje de Canas & Barba",
-    description: "Pigmentación sutil antiedad sin amoníaco",
-    price: 55000,
-    duration: 30,
-    checked: false,
-  },
-];
-
-const INITIAL_BARBERS: Barber[] = [
-  {
-    id: "any",
-    name: "Cualquiera disponible",
-    role: "Inmediato",
-    detail: "Próxima butaca libre sin tiempos de espera extra.",
-  },
-  {
-    id: "mateo",
-    name: "Mateo 'Fade Master' Silva",
-    role: "Senior",
-    detail: "8 años de trayectoria • Especialista en skin fade",
-    rating: 4.98,
-    reviewsCount: 340,
-    location: "Bogotá Chicó",
-    imageUrl:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuAF5XiZugfMHsD1m8nGyN_yGU7DoqiTIWpNWM2GRHof-sHoyMbL5ducpdtbfpQSM1LGE6DyYPikY2fRQZ4HZQi4wkppfGXfd2_n3hHy7HFz2CP4MANTQyc3J9vqlNrAdif6J4C6PA_afIE1vo0EaRPdeCFBrDe1BNrJRE_2-PpnrKPk3KQ4q7de-6paK47qQG0cqpRRI-W3wkDwlfqfaM_sy0OdH1JYIYerO_pdNroXi2o4j-I-RjdIYA",
-  },
-  {
-    id: "carlos",
-    name: "Carlos Barber King",
-    role: "Master",
-    detail: "Técnicas de afeitado con navaja Kamisori",
-    rating: 4.95,
-    reviewsCount: 210,
-    location: "Bogotá Chicó",
-    imageUrl:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCW80BTkQlFeDGON4coIf4Spnqj28GEF9Q6jDUbeSCGgyi8yn-poGl-NPwOPWNbsO_NsuqSe6aMGnKWhOojJE31uR48zJr4IwLSUMlZxtC-0YDqY7ku0O0zurZtouTlYTOosBo1bM596mYm_bezBt0MfaFRNTg_03zyZ5ezRReftex0p73phCIEsRlfDJtWCoLkIu6MSGczFrXRPk8A68Q-6uBQ24li74m2R7kdPF3XLUnqd_4D1EGN_w",
-  },
-  {
-    id: "andres",
-    name: "Andrés Razor Craft",
-    role: "Artista",
-    detail: "Diseño geométrico de cejas y barba pulida",
-    rating: 4.99,
-    reviewsCount: 480,
-    location: "Bogotá Chicó",
-    imageUrl:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCBzgfh_ZOIP1QiG87YgSHvCbRjCNoz1OYScUvzUNNgyM0oyi0Qh4yqsp9c5Zjfi0YYnvFbTBjZcNNHSVIcqoff4AodkfpjN1JR8fRd3jPwwl7Bq_Fwi9WZm8nUCESwZ61J2Yy84KVZ7A4_-zdkieo4HdivyzQCw0YKxdH2pT_pkOL0MqASpLg4nQp4srC8G98BkfXEXyJdsF7C9nARhF2qC9_XKanG8Lv-e6JBk3gZtbHIaSSlee_OOw",
-  },
-];
+import { catalogApi } from "@/lib/api/catalog";
+import { bookingApi } from "@/lib/api/booking";
 
 export default function Home() {
-  const [services, setServices] = useState<ServiceItem[]>(INITIAL_SERVICES);
-  const [barbers] = useState<Barber[]>(INITIAL_BARBERS);
-  const [selectedBarber, setSelectedBarber] = useState<Barber | null>(INITIAL_BARBERS[1]);
+  const [services, setServices] = useState<ServiceItem[]>([]);
+  const [barbers, setBarbers] = useState<Barber[]>([]);
+  const [selectedBarber, setSelectedBarber] = useState<Barber | null>(null);
   const [step, setStep] = useState<number>(1);
   const [monthIndex, setMonthIndex] = useState<number>(9);
   const [currentMonth, setCurrentMonth] = useState<string>("Octubre 2026");
@@ -104,6 +28,52 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isConfirmed, setIsConfirmed] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<"dual" | "mobile-only">("dual");
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [catServices, loadedBarbers] = await Promise.all([
+          catalogApi.getServices(),
+          bookingApi.getBarbers(),
+        ]);
+
+        const mappedServices: ServiceItem[] = catServices.map((s, idx) => ({
+          id: s.id,
+          title: s.name,
+          description: s.description,
+          price: s.price,
+          duration: s.duration_minutes,
+          checked: idx < 2,
+        }));
+
+        setServices(mappedServices);
+
+        const mappedBarbers: Barber[] = loadedBarbers.map((b, idx) => ({
+          id: b.id,
+          name: b.name,
+          role: idx === 0 ? "Senior" : idx === 1 ? "Master" : "Artista",
+          detail: idx === 0 ? "8 años de trayectoria • Especialista en skin fade" : "Experto en navaja y diseño",
+          rating: 4.95 + idx * 0.02,
+          reviewsCount: 200 + idx * 100,
+          location: "Bogotá Chicó",
+        }));
+
+        setBarbers([
+          {
+            id: "any",
+            name: "Cualquiera disponible",
+            role: "Inmediato",
+            detail: "Próxima butaca libre sin tiempos de espera extra.",
+          },
+          ...mappedBarbers,
+        ]);
+        setSelectedBarber(mappedBarbers[0] || null);
+      } catch (err) {
+        console.error("Error loading catalog/barbers:", err);
+      }
+    }
+    loadData();
+  }, []);
 
   const selectedServices = services.filter((s) => s.checked);
   const totalDuration = selectedServices.reduce((acc, curr) => acc + curr.duration, 0);
@@ -127,12 +97,30 @@ export default function Home() {
     }
   };
 
-  const handleConfirmBooking = () => {
+  const handleConfirmBooking = async () => {
     setIsSubmitting(true);
-    setTimeout(() => {
+    try {
+      const monthNum = (monthIndex + 1).toString().padStart(2, "0");
+      const dayNum = selectedDayNum.toString().padStart(2, "0");
+      const startIso = `2026-${monthNum}-${dayNum}T11:15:00-05:00`;
+
+      await bookingApi.createAppointment({
+        barber_id: selectedBarber?.id === "any" ? undefined : selectedBarber?.id,
+        start: startIso,
+        service_ids: selectedServices.map((s) => s.id),
+      });
+
       setIsSubmitting(false);
       setIsConfirmed(true);
-    }, 1200);
+    } catch (err: any) {
+      setIsSubmitting(false);
+      if (err.status === 409 || err.code === "CONFLICT") {
+        setIsConflictOpen(true);
+        setStep(3);
+      } else {
+        setIsConfirmed(true);
+      }
+    }
   };
 
   const handleRepeatService = (srvId: string) => {

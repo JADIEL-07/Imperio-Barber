@@ -14,41 +14,63 @@
     networks:
       - imperio-network
 
+  gateway:
+    image: nginx:alpine
+    container_name: imperio-gateway
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./infra/gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - auth-service
+      - catalog-service
+      - booking-service
+    networks:
+      - imperio-network
+
   auth-service:
     build:
-      context: ./services/auth
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/auth/Dockerfile
     container_name: imperio-auth
     restart: unless-stopped
     environment:
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/auth_db
-      - JWT_SECRET=${JWT_SECRET:-supersecretkey}
+      - SESSION_SECRET=${SESSION_SECRET:-supersecretkey32charactersminimum!}
+      - ENVIRONMENT=development
     depends_on:
       - postgres
     networks:
       - imperio-network
 
-  users-service:
+  catalog-service:
     build:
-      context: ./services/users
-      dockerfile: Dockerfile
-    container_name: imperio-users
+      context: .
+      dockerfile: services/catalog/Dockerfile
+    container_name: imperio-catalog
     restart: unless-stopped
     environment:
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/users_db
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/catalog_db
+      - SESSION_SECRET=${SESSION_SECRET:-supersecretkey32charactersminimum!}
+      - ENVIRONMENT=development
     depends_on:
       - postgres
     networks:
       - imperio-network
 
-  orders-service:
+  booking-service:
     build:
-      context: ./services/orders
-      dockerfile: Dockerfile
-    container_name: imperio-orders
+      context: .
+      dockerfile: services/booking/Dockerfile
+    container_name: imperio-booking
     restart: unless-stopped
     environment:
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/orders_db
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/booking_db
+      - SESSION_SECRET=${SESSION_SECRET:-supersecretkey32charactersminimum!}
+      - CATALOG_SERVICE_URL=http://catalog-service:8000/catalog
+      - AUTH_SERVICE_URL=http://auth-service:8000/auth
+      - ENVIRONMENT=development
     depends_on:
       - postgres
     networks:

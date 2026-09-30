@@ -9,8 +9,8 @@ ENV PYTHONUNBUFFERED=1 \
 RUN pip install --no-cache-dir fastapi uvicorn[standard] pydantic pydantic-settings sqlalchemy asyncpg alembic pyjwt httpx pytest pytest-asyncio
 
 COPY libs /app/libs
-COPY services/auth /app/services/auth
+COPY services/catalog /app/services/catalog
 
-WORKDIR /app/services/auth
+WORKDIR /app/services/catalog
 
-CMD ["uvicorn", "src.auth.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "src.catalog.main:app", "--host", "0.0.0.0", "--port", "8000"]

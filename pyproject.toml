@@ -1,4 +1,4 @@
-﻿[project]
+[project]
 name = "imperio-barber"
 version = "0.1.0"
 description = "Monorepo para Imperio Barber"
@@ -24,7 +24,9 @@ ignore = []
 minversion = "7.0"
 addopts = "-ra -q --strict-markers"
 testpaths = [
-    "services/*/tests",
+    "services/auth/tests",
+    "services/catalog/tests",
+    "services/booking/tests",
     "tests",
 ]
 markers = [
@@ -33,3 +35,4 @@ markers = [
     "contract: pruebas de contratos de API entre servicios",
     "e2e: pruebas de flujos completos end-to-end",
 ]
+asyncio_mode = "auto"

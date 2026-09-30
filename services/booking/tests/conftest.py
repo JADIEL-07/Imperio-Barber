@@ -12,8 +12,8 @@ sys.path.insert(0, str(service_root))
 sys.path.insert(0, str(monorepo_root))
 
 from libs.common.database import Base
-from src.auth.db.session import get_db
-from src.auth.main import app
+from src.booking.db.session import get_db
+from src.booking.main import app
 
 TEST_DB_URL = "sqlite+aiosqlite:///:memory:"
 

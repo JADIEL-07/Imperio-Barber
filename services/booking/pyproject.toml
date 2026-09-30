@@ -1,7 +1,7 @@
 [project]
-name = "auth-service"
+name = "booking-service"
 version = "0.1.0"
-description = "Microservicio de Autenticación y Gestión de Usuarios para Imperio Barber"
+description = "Microservicio de Reservas, Agenda y Disponibilidad para Imperio Barber"
 dependencies = [
     "fastapi>=0.110.0",
     "uvicorn[standard]>=0.28.0",
