@@ -6,7 +6,7 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/app
 
-RUN pip install --no-cache-dir fastapi uvicorn[standard] pydantic pydantic-settings sqlalchemy asyncpg alembic pyjwt httpx pytest pytest-asyncio
+RUN pip install --no-cache-dir fastapi uvicorn[standard] pydantic pydantic-settings "sqlalchemy[asyncio]" asyncpg alembic pyjwt httpx pytest pytest-asyncio
 
 COPY libs /app/libs
 COPY services/catalog /app/services/catalog
