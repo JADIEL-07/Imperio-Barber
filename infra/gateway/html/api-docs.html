@@ -8,26 +8,43 @@
 <style>
   :root { color-scheme: dark; }
   body { margin: 0; background: #0b0f12; }
-  #topbar {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1.25rem;
+  #banner {
+    padding: 0.6rem 1.25rem;
     background: #181c1f;
     border-bottom: 1px solid #313539;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #a08e7a;
+    font-size: 0.8rem;
   }
-  #topbar h1 { font-size: 1rem; margin: 0; color: #ffc174; font-weight: 600; }
-  #topbar span { color: #a08e7a; font-size: 0.8rem; }
-  /* Oculta la topbar verde por defecto de Swagger UI (ya tenemos la nuestra) */
-  .swagger-ui .topbar { display: none; }
+  #banner strong { color: #ffc174; }
+
+  /* Topbar de Swagger UI (donde vive el selector de microservicio): se
+     mantiene, solo se repinta oscura en vez del verde por defecto. */
+  .swagger-ui .topbar {
+    background-color: #181c1f;
+    border-bottom: 1px solid #313539;
+    padding: 10px 0;
+  }
+  .swagger-ui .topbar .download-url-wrapper .select-label select {
+    border-color: #ffc174;
+  }
+  .swagger-ui .topbar .download-url-wrapper .download-url-button {
+    background: #ffc174;
+    color: #181c1f;
+  }
+  /* Oculta el logo/link por defecto de Swagger ("swagger" a la izquierda) */
+  .swagger-ui .topbar .topbar-wrapper img,
+  .swagger-ui .topbar .topbar-wrapper a {
+    display: none;
+  }
+  /* Oculta el link directo al .json crudo de la spec activa */
+  .swagger-ui .info a.link[href$="openapi.json"] {
+    display: none;
+  }
 </style>
 </head>
 <body>
-<div id="topbar">
-  <h1>Imperio Barber API</h1>
-  <span>&mdash; usa el selector de la izquierda (dentro del cuadro) para cambiar de microservicio</span>
-</div>
+<div id="banner">Imperio Barber &mdash; <strong>API Docs</strong>: usa el selector de arriba para cambiar entre Auth / Catalog / Booking.</div>
 <div id="swagger-ui"></div>
 
 <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
