@@ -6,18 +6,13 @@ Plataforma de gestión y reservas para barbería desarrollada bajo arquitectura 
 
 ```text
 Imperio-Barber/
-├── Makefile                    # make test, make up, make lint, make format, make clean
-├── docker-compose.yml          # orquestación local (postgres, gateway, auth, catalog, booking)
-├── docker-compose.test.yml     # entorno de pruebas automatizadas
+├── Makefile                    # make test, make lint, make format, make clean
 ├── .env.example                # plantilla de configuración
 ├── pyproject.toml              # configuración global de Ruff y Pytest
 ├── docs/
 │   ├── api-contract.md         # contrato formal e inmutable de API
 │   ├── architecture.md         # diseño arquitectónico
 │   └── adr/                    # registros de decisiones arquitectónicas
-├── infra/
-│   ├── gateway/nginx.conf      # proxy inverso (/api/auth, /api/catalog, /api/bookings)
-│   └── postgres/init/          # inicialización de auth_db, catalog_db, booking_db
 ├── libs/
 │   └── common/                 # logging estructurado, excepciones estándar, seguridad y sesiones
 ├── services/
@@ -51,12 +46,6 @@ Imperio-Barber/
 ## 🚀 Comandos Rápidos
 
 ```bash
-# Levantar el entorno completo en local con Docker Compose
-make up
-
-# Detener los contenedores
-make down
-
 # Ejecutar la suite de pruebas unitarias y de contrato (FastAPI + Pytest)
 make test
 
@@ -66,3 +55,8 @@ make lint
 # Formatear código
 make format
 ```
+
+> ⚠️ El despliegue en contenedores (Docker Compose, Dockerfiles por servicio, gateway nginx) se
+> retiró del repositorio para rehacerlo desde cero. Hasta que se agregue de nuevo, cada
+> microservicio se corre localmente con `uvicorn` (ver su propio `pyproject.toml`) y el frontend
+> con `npm run dev` dentro de `web/`.
