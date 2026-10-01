@@ -38,6 +38,10 @@ class ValidationError(AppError):
     def __init__(self, message: str = "Datos de entrada invalidos"):
         super().__init__(code="VALIDATION_ERROR", message=message, status_code=422)
 
+class ServiceUnavailableError(AppError):
+    def __init__(self, message: str = "Un servicio dependiente no esta disponible en este momento"):
+        super().__init__(code="SERVICE_UNAVAILABLE", message=message, status_code=503)
+
 def setup_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(AppError)
     async def app_error_handler(request: Request, exc: AppError):

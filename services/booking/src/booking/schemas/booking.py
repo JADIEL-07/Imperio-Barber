@@ -29,13 +29,32 @@ class BarberSchema(BaseModel):
     name: str
     phone: str
     avatar_url: Optional[str] = None
+    commission_rate: float = 0.0
     is_active: bool
 
 class UpdateBarberPayload(BaseModel):
     name: Optional[str] = Field(None, min_length=2, max_length=120)
     phone: Optional[str] = Field(None, max_length=30)
     avatar_url: Optional[str] = Field(None, max_length=500)
+    commission_rate: Optional[float] = Field(None, ge=0, le=1)
     is_active: Optional[bool] = None
+
+class CommissionSummarySchema(BaseModel):
+    barber_id: str
+    barber_name: str
+    commission_rate: float
+    pending_amount: int
+    pending_count: int
+    paid_amount: int
+
+class CommissionPayoutSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    barber_id: str
+    amount: int
+    appointments_count: int
+    created_at: datetime
 
 class SlotSchema(BaseModel):
     start: str
@@ -73,6 +92,9 @@ class AppointmentSchema(BaseModel):
     total_price: int
     status: Literal["pending", "confirmed", "completed", "cancelled", "no_show"]
     can_cancel: bool
+    checked_in_at: Optional[str] = None
+    commission_amount: Optional[int] = None
+    commission_paid: bool = False
 
 class CreateAppointmentPayload(BaseModel):
     barber_id: Optional[str] = None
@@ -101,3 +123,6 @@ class StatsResponse(BaseModel):
     status_counts: Dict[str, int]
     month_revenue: int
     top_services: List[Dict[str, Any]]
+    revenue_by_service: List[Dict[str, Any]]
+    revenue_by_day: List[Dict[str, Any]]
+    total_commissions_paid: int

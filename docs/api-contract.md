@@ -71,7 +71,7 @@ Este documento define el contrato formal e inmutable entre el backend de microse
 ## 4. Microservicio Booking (`/api/bookings`)
 
 ### Modelos
-- `Barber`: `{ id: string, name: string, phone: string, avatar_url: string | null, services: Service[], is_active: boolean }`
+- `Barber`: `{ id: string, name: string, phone: string, avatar_url: string | null, commission_rate: number (0.0-1.0), services: Service[], is_active: boolean }`
 - `Slot`: `{ start: string, end: string, barber_id: string }`
 - `AppointmentItem`: `{ name: string, duration_minutes: integer, price: integer }`
 - `Appointment`:
@@ -85,24 +85,36 @@ Este documento define el contrato formal e inmutable entre el backend de microse
     "end": "2026-10-24T12:40:00-05:00",
     "total_price": 135000,
     "status": "pending" | "confirmed" | "completed" | "cancelled" | "no_show",
-    "can_cancel": true
+    "can_cancel": true,
+    "checked_in_at": "2026-10-24T11:10:00-05:00 | null",
+    "commission_amount": "integer | null (se calcula solo al pasar a completed)",
+    "commission_paid": false
   }
   ```
+- `CommissionSummary`: `{ barber_id, barber_name, commission_rate, pending_amount: integer, pending_count: integer, paid_amount: integer }`
+- `CommissionPayout`: `{ id, barber_id, amount: integer, appointments_count: integer, created_at: string }`
 
 ### Endpoints
 | Método | Ruta | Descripción | Payload / Query | Respuesta |
 |---|---|---|---|---|
 | GET | `/api/bookings/barbers` | Listar barberos con servicios que realizan | - | `Barber[]` |
-| PATCH | `/api/bookings/barbers/{id}` | Modificar perfil del barbero (Admin) | `{ name?, phone?, avatar_url?, is_active? }` | `Barber` |
+| PATCH | `/api/bookings/barbers/{id}` | Modificar perfil del barbero (Admin) | `{ name?, phone?, avatar_url?, commission_rate?, is_active? }` | `Barber` |
 | GET | `/api/bookings/availability` | Calcular turnos libres según fecha y servicios | Query: `?barber_id=&date=YYYY-MM-DD&service_ids=&combo_id=` | `{ "slots": Slot[] }` |
-| POST | `/api/bookings/appointments` | Agendar cita (retorna 409 si la franja fue ocupada) | `{ barber_id: string, start: string, service_ids?: string[], combo_id?: string }` | `Appointment` |
+| POST | `/api/bookings/appointments` | Agendar cita (retorna 409 si la franja fue ocupada, 404 si el servicio/combo no existe) | `{ barber_id?: string, start: string, service_ids?: string[], combo_id?: string }` | `Appointment` |
 | GET | `/api/bookings/appointments` | Listar citas según rol y filtros | Query: `?scope=mine\|barber\|all&status=&from=&to=&page=&page_size=` | `PageResponse<Appointment>` |
 | PATCH | `/api/bookings/appointments/{id}` | Actualizar estado o reprogramar horario | `{ status?: string, start?: string }` | `Appointment` |
+| POST | `/api/bookings/appointments/{id}/check-in` | Check-in (boleto QR): el propio cliente o el personal marcan la llegada | - | `Appointment` |
 | GET | `/api/bookings/barbers/{id}/schedule` | Obtener horario semanal del barbero | - | `[{ weekday: 0-6, start: "HH:MM", end: "HH:MM" }]` |
 | PUT | `/api/bookings/barbers/{id}/schedule` | Actualizar horario semanal | `[{ weekday: 0-6, start: "HH:MM", end: "HH:MM" }]` | `Schedule[]` |
 | GET | `/api/bookings/barbers/{id}/time-off` | Listar bloqueos y vacaciones | - | `[{ id, from, to, reason }]` |
 | POST | `/api/bookings/barbers/{id}/time-off` | Crear bloqueo puntual | `{ from, to, reason }` | `TimeOff` |
 | DELETE | `/api/bookings/barbers/{id}/time-off/{time_off_id}` | Eliminar bloqueo | - | `204 No Content` |
+| GET | `/api/bookings/barbers/{id}/commissions` | Resumen de comisiones pendientes/pagadas (Admin) | - | `CommissionSummary` |
+| POST | `/api/bookings/barbers/{id}/commissions/payout` | Pagar todas las comisiones pendientes del barbero (Admin); 422 si no hay nada pendiente | - | `CommissionPayout` |
 | GET | `/api/bookings/settings` | Obtener configuración del negocio | - | `{ opening_hours, cancel_min_hours: 2, slot_minutes: 15 }` |
 | PUT | `/api/bookings/settings` | Actualizar configuración (Admin) | `{ opening_hours?, cancel_min_hours?, slot_minutes? }` | `Settings` |
-| GET | `/api/bookings/stats` | Métricas de dashboard (Admin) | - | `{ today_appointments, status_counts, month_revenue, top_services }` |
+| GET | `/api/bookings/stats` | Métricas de dashboard (Admin) | - | `{ today_appointments, status_counts, month_revenue, top_services, revenue_by_service, revenue_by_day, total_commissions_paid }` |
+
+**Nota sobre check-in:** no requiere escanear nada en el backend - el QR en el frontend simplemente codifica el `id` de la cita; tanto el cliente dueño de la cita como cualquier `employee`/`admin` pueden llamar este endpoint (por ejemplo, el barbero lo hace manualmente desde su agenda si el cliente no usa el QR). Solo aplica a citas en `pending`/`confirmed` sin check-in previo.
+
+**Nota sobre comisiones:** `commission_amount` se calcula y congela (snapshot) con la `commission_rate` vigente del barbero en el momento exacto en que la cita pasa a `completed` - cambios posteriores a la tarifa no alteran comisiones ya calculadas. `commission_paid` se pone en `true` para todas las citas incluidas al llamar a `.../commissions/payout`, que además crea un registro histórico (`CommissionPayout`) usado para `total_commissions_paid` en `/stats`.

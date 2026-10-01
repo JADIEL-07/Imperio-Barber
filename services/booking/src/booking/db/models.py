@@ -1,6 +1,6 @@
 ﻿from datetime import datetime, timezone
 from typing import List, Optional
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, JSON, String, Table
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, JSON, String, Table
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from libs.common.database import Base, BaseModel
 
@@ -17,6 +17,8 @@ class BarberModel(BaseModel):
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     phone: Mapped[str] = mapped_column(String(30), default="", nullable=False)
     avatar_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    # Fracción 0.0-1.0 (ej. 0.4 = 40%) que el barbero recibe de cada cita completada.
+    commission_rate: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     schedules: Mapped[List["BarberScheduleModel"]] = relationship(
@@ -27,6 +29,9 @@ class BarberModel(BaseModel):
     )
     appointments: Mapped[List["AppointmentModel"]] = relationship(
         "AppointmentModel", back_populates="barber", lazy="selectin"
+    )
+    commission_payouts: Mapped[List["CommissionPayoutModel"]] = relationship(
+        "CommissionPayoutModel", back_populates="barber", cascade="all, delete-orphan", lazy="selectin"
     )
 
 class BarberScheduleModel(BaseModel):
@@ -64,6 +69,15 @@ class AppointmentModel(BaseModel):
     total_price: Mapped[int] = mapped_column(Integer, nullable=False)
     status: Mapped[str] = mapped_column(String(20), default="confirmed", nullable=False) # pending, confirmed, completed, cancelled, no_show
 
+    # Check-in (boleto QR): cuando el cliente llega, o el personal lo marca manualmente.
+    checked_in_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # Comisión del barbero para esta cita. Se calcula y congela (snapshot) con la
+    # commission_rate vigente del barbero en el momento en que la cita pasa a
+    # "completed", para que cambios futuros a la tarifa no alteren el historico.
+    commission_amount: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    commission_paid: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
     barber: Mapped[BarberModel] = relationship("BarberModel", back_populates="appointments")
     items: Mapped[List["AppointmentItemModel"]] = relationship(
         "AppointmentItemModel", back_populates="appointment", cascade="all, delete-orphan", lazy="selectin"
@@ -78,6 +92,17 @@ class AppointmentItemModel(BaseModel):
     price: Mapped[int] = mapped_column(Integer, nullable=False)
 
     appointment: Mapped[AppointmentModel] = relationship("AppointmentModel", back_populates="items")
+
+class CommissionPayoutModel(BaseModel):
+    """Registro historico de pagos de comision realizados a un barbero.
+    `created_at` (heredado de BaseModel) es la fecha del pago."""
+    __tablename__ = "commission_payouts"
+
+    barber_id: Mapped[str] = mapped_column(String(36), ForeignKey("barbers.id", ondelete="CASCADE"), nullable=False, index=True)
+    amount: Mapped[int] = mapped_column(Integer, nullable=False)
+    appointments_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+    barber: Mapped[BarberModel] = relationship("BarberModel", back_populates="commission_payouts")
 
 class BookingSettingsModel(BaseModel):
     __tablename__ = "booking_settings"

@@ -9,6 +9,7 @@ from src.booking.db.models import (
     BarberScheduleModel,
     BarberTimeOffModel,
     BookingSettingsModel,
+    CommissionPayoutModel,
 )
 
 class BookingRepository:
@@ -142,6 +143,20 @@ class BookingRepository:
         await self.db.commit()
         await self.db.refresh(appointment)
         return appointment
+
+    # Commission payouts
+    async def create_commission_payout(self, payout: CommissionPayoutModel) -> CommissionPayoutModel:
+        self.db.add(payout)
+        await self.db.commit()
+        await self.db.refresh(payout)
+        return payout
+
+    async def list_commission_payouts(self, barber_id: Optional[str] = None) -> List[CommissionPayoutModel]:
+        q = select(CommissionPayoutModel)
+        if barber_id:
+            q = q.where(CommissionPayoutModel.barber_id == barber_id)
+        res = await self.db.execute(q.order_by(CommissionPayoutModel.created_at.desc()))
+        return list(res.scalars().all())
 
     # Settings
     async def get_or_create_settings(self) -> BookingSettingsModel:

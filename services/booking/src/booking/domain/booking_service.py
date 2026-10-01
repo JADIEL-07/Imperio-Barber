@@ -2,8 +2,9 @@
 from typing import Any, Dict, List, Optional, Tuple
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from libs.common.errors import ConflictError, ForbiddenError, NotFoundError, ValidationError
+from libs.common.errors import ConflictError, ForbiddenError, NotFoundError, ServiceUnavailableError, ValidationError
 from libs.common.security import CurrentUser
+from src.booking.integrations.catalog_client import CatalogClient, CatalogUnavailableError
 from src.booking.db.models import (
     AppointmentItemModel,
     AppointmentModel,
@@ -11,6 +12,7 @@ from src.booking.db.models import (
     BarberScheduleModel,
     BarberTimeOffModel,
     BookingSettingsModel,
+    CommissionPayoutModel,
 )
 from src.booking.db.repository import BookingRepository
 from src.booking.schemas.booking import (
@@ -22,6 +24,8 @@ from src.booking.schemas.booking import (
     BarberTimeOffSchema,
     BookingSettingsSchema,
     ClientRef,
+    CommissionPayoutSchema,
+    CommissionSummarySchema,
     CreateAppointmentPayload,
     CreateTimeOffPayload,
     SlotSchema,
@@ -48,6 +52,10 @@ class BookingDomainService:
             and (appt_start - now_utc) >= timedelta(hours=cancel_min_hours)
         )
 
+        checked_in = appt.checked_in_at
+        if checked_in is not None and checked_in.tzinfo is None:
+            checked_in = checked_in.replace(tzinfo=timezone.utc)
+
         return AppointmentSchema(
             id=appt.id,
             client=ClientRef(id=appt.client_id, name=appt.client_name, phone=appt.client_phone),
@@ -58,6 +66,9 @@ class BookingDomainService:
             total_price=appt.total_price,
             status=appt.status,
             can_cancel=can_cancel,
+            checked_in_at=checked_in.isoformat() if checked_in else None,
+            commission_amount=appt.commission_amount,
+            commission_paid=appt.commission_paid,
         )
 
     # Barbers
@@ -90,11 +101,79 @@ class BookingDomainService:
             barber.phone = payload.phone.strip()
         if payload.avatar_url is not None:
             barber.avatar_url = payload.avatar_url.strip()
+        if payload.commission_rate is not None:
+            barber.commission_rate = payload.commission_rate
         if payload.is_active is not None:
             barber.is_active = payload.is_active
 
         updated = await self.repo.update_barber(barber)
         return BarberSchema.model_validate(updated)
+
+    # Check-in (boleto QR)
+    async def check_in_appointment(self, appointment_id: str, current_user: CurrentUser) -> AppointmentSchema:
+        settings = await self.repo.get_or_create_settings()
+        appt = await self.repo.get_appointment_by_id(appointment_id)
+        if not appt:
+            raise NotFoundError(f"Cita con ID {appointment_id} no encontrada")
+
+        is_owner = appt.client_id == current_user.id
+        is_staff = current_user.role in ["employee", "admin"]
+        if not is_owner and not is_staff:
+            raise ForbiddenError("No puedes hacer check-in de la cita de otro cliente")
+
+        if appt.status not in ["pending", "confirmed"]:
+            raise ValidationError("Solo se puede hacer check-in de citas pendientes o confirmadas")
+        if appt.checked_in_at is not None:
+            raise ValidationError("Esta cita ya tiene el check-in registrado")
+
+        appt.checked_in_at = datetime.now(timezone.utc)
+        updated = await self.repo.update_appointment(appt)
+        return self._to_schema(updated, settings.cancel_min_hours)
+
+    # Comisiones
+    async def get_barber_commissions(self, barber_id: str) -> CommissionSummarySchema:
+        barber = await self.repo.get_barber_by_id(barber_id)
+        if not barber:
+            raise NotFoundError(f"Barbero con ID {barber_id} no encontrado")
+
+        completed, _ = await self.repo.list_appointments(barber_id=barber_id, status="completed", limit=1000)
+        pending_appts = [a for a in completed if a.commission_amount and not a.commission_paid]
+        pending_amount = sum(a.commission_amount or 0 for a in pending_appts)
+
+        payouts = await self.repo.list_commission_payouts(barber_id=barber_id)
+        paid_amount = sum(p.amount for p in payouts)
+
+        return CommissionSummarySchema(
+            barber_id=barber.id,
+            barber_name=barber.name,
+            commission_rate=barber.commission_rate,
+            pending_amount=pending_amount,
+            pending_count=len(pending_appts),
+            paid_amount=paid_amount,
+        )
+
+    async def pay_barber_commissions(self, barber_id: str) -> CommissionPayoutSchema:
+        barber = await self.repo.get_barber_by_id(barber_id)
+        if not barber:
+            raise NotFoundError(f"Barbero con ID {barber_id} no encontrado")
+
+        completed, _ = await self.repo.list_appointments(barber_id=barber_id, status="completed", limit=1000)
+        pending_appts = [a for a in completed if a.commission_amount and not a.commission_paid]
+        if not pending_appts:
+            raise ValidationError("No hay comisiones pendientes para pagar")
+
+        total = sum(a.commission_amount or 0 for a in pending_appts)
+        for appt in pending_appts:
+            appt.commission_paid = True
+            await self.repo.update_appointment(appt)
+
+        payout = CommissionPayoutModel(
+            barber_id=barber_id,
+            amount=total,
+            appointments_count=len(pending_appts),
+        )
+        saved = await self.repo.create_commission_payout(payout)
+        return CommissionPayoutSchema.model_validate(saved)
 
     # Availability engine
     async def get_availability(
@@ -194,15 +273,60 @@ class BookingDomainService:
         return available_slots
 
     # Appointments
+    async def _resolve_booking_items(
+        self, payload: CreateAppointmentPayload
+    ) -> Tuple[List[Dict[str, Any]], int, int]:
+        """
+        Resuelve service_ids / combo_id contra el microservicio catalog para
+        obtener nombre, precio y duracion reales. booking no tiene acceso
+        directo a la base de datos de catalog (son microservicios separados).
+        """
+        if not payload.service_ids and not payload.combo_id:
+            raise ValidationError("Debes indicar service_ids o combo_id")
+        if payload.service_ids and payload.combo_id:
+            raise ValidationError("Indica service_ids o combo_id, no ambos")
+
+        catalog = CatalogClient()
+        try:
+            if payload.combo_id:
+                combos = await catalog.list_combos()
+                combo = next((c for c in combos if c["id"] == payload.combo_id), None)
+                if not combo:
+                    raise NotFoundError("Combo no encontrado o inactivo")
+                items = [
+                    {"name": s["name"], "duration_minutes": s["duration_minutes"], "price": s["price"]}
+                    for s in combo["services"]
+                ]
+                return items, combo["price"], combo["duration_minutes"]
+
+            services = await catalog.list_services()
+            by_id = {s["id"]: s for s in services}
+            selected = []
+            for service_id in payload.service_ids:
+                found = by_id.get(service_id)
+                if not found:
+                    raise NotFoundError(f"Servicio con ID {service_id} no encontrado o inactivo")
+                selected.append(found)
+
+            items = [
+                {"name": s["name"], "duration_minutes": s["duration_minutes"], "price": s["price"]}
+                for s in selected
+            ]
+            total_price = sum(s["price"] for s in selected)
+            total_duration = sum(s["duration_minutes"] for s in selected)
+            return items, total_price, total_duration
+        except CatalogUnavailableError as exc:
+            raise ServiceUnavailableError(
+                "No pudimos validar los servicios seleccionados, intenta de nuevo en un momento."
+            ) from exc
+
     async def create_appointment(
         self,
         current_user: CurrentUser,
         payload: CreateAppointmentPayload,
-        items: List[Dict[str, Any]],
-        total_price: int,
-        total_duration: int,
     ) -> AppointmentSchema:
         settings = await self.repo.get_or_create_settings()
+        items, total_price, total_duration = await self._resolve_booking_items(payload)
 
         # Select barber
         barber = None
@@ -310,7 +434,12 @@ class BookingDomainService:
             appt.status = "cancelled"
 
         elif payload.status is not None:
+            was_completed = appt.status == "completed"
             appt.status = payload.status
+            if payload.status == "completed" and not was_completed and appt.commission_amount is None:
+                barber = await self.repo.get_barber_by_id(appt.barber_id)
+                rate = barber.commission_rate if barber else 0.0
+                appt.commission_amount = round(appt.total_price * rate)
 
         if payload.start is not None:
             total_duration = sum(item.duration_minutes for item in appt.items) or 45
@@ -392,24 +521,56 @@ class BookingDomainService:
 
         today_appts, _ = await self.repo.list_appointments(from_date=today_start, to_date=today_end, limit=500)
         month_start = today_start.replace(day=1)
-        month_appts, _ = await self.repo.list_appointments(from_date=month_start, limit=1000)
+        month_appts, _ = await self.repo.list_appointments(from_date=month_start, limit=2000)
 
-        month_revenue = sum(a.total_price for a in month_appts if a.status in ["confirmed", "completed"])
+        revenue_statuses = ["confirmed", "completed"]
+        month_revenue = sum(a.total_price for a in month_appts if a.status in revenue_statuses)
 
         status_counts = {"pending": 0, "confirmed": 0, "completed": 0, "cancelled": 0, "no_show": 0}
         for a in today_appts:
             if a.status in status_counts:
                 status_counts[a.status] += 1
 
+        # Servicios mas pedidos y su ingreso, calculados de verdad a partir de los
+        # items de las citas del mes (antes era una lista quemada).
+        service_counts: Dict[str, int] = {}
+        service_revenue: Dict[str, int] = {}
+        for a in month_appts:
+            if a.status not in revenue_statuses:
+                continue
+            for item in a.items:
+                service_counts[item.name] = service_counts.get(item.name, 0) + 1
+                service_revenue[item.name] = service_revenue.get(item.name, 0) + item.price
+
         top_services = [
-            {"name": "Corte Signature Aura", "count": 28},
-            {"name": "Ritual Afeitado Imperial", "count": 19},
-            {"name": "Combo Presidencial Black", "count": 14},
+            {"name": name, "count": count}
+            for name, count in sorted(service_counts.items(), key=lambda kv: kv[1], reverse=True)[:5]
         ]
+        revenue_by_service = [
+            {"name": name, "total": total}
+            for name, total in sorted(service_revenue.items(), key=lambda kv: kv[1], reverse=True)[:5]
+        ]
+
+        # Ingresos por dia (ultimos dias del mes en curso hasta hoy).
+        revenue_per_day: Dict[str, int] = {}
+        for a in month_appts:
+            if a.status not in revenue_statuses:
+                continue
+            day_key = a.start_time.astimezone(BOGOTA_TZ).date().isoformat()
+            revenue_per_day[day_key] = revenue_per_day.get(day_key, 0) + a.total_price
+        revenue_by_day = [
+            {"date": day, "total": total} for day, total in sorted(revenue_per_day.items())
+        ]
+
+        payouts = await self.repo.list_commission_payouts()
+        total_commissions_paid = sum(p.amount for p in payouts)
 
         return StatsResponse(
             today_appointments=len(today_appts),
             status_counts=status_counts,
             month_revenue=month_revenue,
             top_services=top_services,
+            revenue_by_service=revenue_by_service,
+            revenue_by_day=revenue_by_day,
+            total_commissions_paid=total_commissions_paid,
         )

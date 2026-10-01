@@ -13,6 +13,8 @@ from src.booking.schemas.booking import (
     BarberSchema,
     BarberTimeOffSchema,
     BookingSettingsSchema,
+    CommissionPayoutSchema,
+    CommissionSummarySchema,
     CreateAppointmentPayload,
     CreateTimeOffPayload,
     StatsResponse,
@@ -65,21 +67,17 @@ async def create_appointment(
     db: AsyncSession = Depends(get_db),
 ):
     service = BookingDomainService(db)
-    # Default items and pricing calculation
-    items = [
-        {"name": "Corte Signature Aura", "duration_minutes": 45, "price": 75000},
-        {"name": "Ritual Afeitado Imperial", "duration_minutes": 40, "price": 60000},
-    ]
-    total_price = 135000
-    total_duration = 85
+    return await service.create_appointment(current_user=current_user, payload=payload)
 
-    return await service.create_appointment(
-        current_user=current_user,
-        payload=payload,
-        items=items,
-        total_price=total_price,
-        total_duration=total_duration,
-    )
+# 3b. Check-in (boleto QR)
+@router.post("/appointments/{appointment_id}/check-in", response_model=AppointmentSchema)
+async def check_in_appointment(
+    appointment_id: str,
+    current_user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    service = BookingDomainService(db)
+    return await service.check_in_appointment(appointment_id, current_user)
 
 # 4. List Appointments
 @router.get("/appointments", response_model=PageResponse[AppointmentSchema])
@@ -177,6 +175,25 @@ async def update_settings(
 ):
     service = BookingDomainService(db)
     return await service.update_settings(payload)
+
+# 8b. Comisiones de barberos
+@router.get("/barbers/{barber_id}/commissions", response_model=CommissionSummarySchema)
+async def get_barber_commissions(
+    barber_id: str,
+    current_user: CurrentUser = Depends(require_role(["admin"])),
+    db: AsyncSession = Depends(get_db),
+):
+    service = BookingDomainService(db)
+    return await service.get_barber_commissions(barber_id)
+
+@router.post("/barbers/{barber_id}/commissions/payout", response_model=CommissionPayoutSchema, status_code=status.HTTP_201_CREATED)
+async def pay_barber_commissions(
+    barber_id: str,
+    current_user: CurrentUser = Depends(require_role(["admin"])),
+    db: AsyncSession = Depends(get_db),
+):
+    service = BookingDomainService(db)
+    return await service.pay_barber_commissions(barber_id)
 
 # 9. Dashboard Stats
 @router.get("/stats", response_model=StatsResponse)
