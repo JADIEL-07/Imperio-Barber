@@ -87,6 +87,9 @@ export default function CombosAdminPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-space-md">
           {combos.map((c) => (
             <div key={c.id} className="flex flex-col gap-space-sm p-space-md rounded-xl bg-surface-container-low border border-surface-container-high">
+              {c.image_url && (
+                <img src={c.image_url} alt={c.name} className="w-full h-32 object-cover rounded-lg border border-surface-container-high" />
+              )}
               <div className="flex items-center justify-between">
                 <h3 className="font-title-md text-title-md font-bold text-on-surface">{c.name}</h3>
                 <span className={`font-label-xs text-label-xs px-2 py-0.5 rounded font-bold uppercase ${c.is_active ? "bg-primary/20 text-primary" : "bg-error-container/40 text-on-error-container"}`}>
@@ -162,6 +165,7 @@ function ComboModal({
   const [name, setName] = useState(editing?.name || "");
   const [description, setDescription] = useState(editing?.description || "");
   const [price, setPrice] = useState(editing?.price?.toString() || "0");
+  const [imageUrl, setImageUrl] = useState(editing?.image_url || "");
   const [selectedIds, setSelectedIds] = useState<string[]>(editing?.services.map((s) => s.id) || []);
   const [isActive, setIsActive] = useState(editing?.is_active ?? true);
   const [error, setError] = useState<string | null>(null);
@@ -192,6 +196,7 @@ function ComboModal({
           description: description.trim(),
           service_ids: selectedIds,
           price: priceNum,
+          image_url: imageUrl.trim() || null,
           is_active: isActive,
         });
         onSaved(created);
@@ -201,6 +206,7 @@ function ComboModal({
           description: description.trim(),
           service_ids: selectedIds,
           price: priceNum,
+          image_url: imageUrl.trim() || null,
           is_active: isActive,
         });
         onSaved(updated);
@@ -269,6 +275,12 @@ function ComboModal({
               El precio del combo supera la suma de sus servicios ({formatCOP(sumPrice)}). No habrá ahorro para el cliente.
             </span>
           )}
+        </div>
+
+        <div className="flex flex-col gap-space-xs">
+          <label className="font-label-md text-label-md text-on-surface-variant">URL de imagen (opcional)</label>
+          <input type="url" placeholder="https://..." value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className="px-space-sm py-space-xs rounded-lg bg-surface-container text-on-surface border border-surface-container-highest" />
+          {imageUrl && <img src={imageUrl} alt="Vista previa" className="w-full h-28 object-cover rounded-lg border border-surface-container-highest" />}
         </div>
 
         <label className="flex items-center gap-space-xs">

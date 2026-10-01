@@ -9,6 +9,7 @@ class ServiceSchema(BaseModel):
     description: str
     duration_minutes: int
     price: int
+    image_url: Optional[str] = None
     is_active: bool
 
 class CreateServicePayload(BaseModel):
@@ -16,6 +17,7 @@ class CreateServicePayload(BaseModel):
     description: str = Field("", max_length=500)
     duration_minutes: int = Field(..., gt=0, le=480)
     price: int = Field(..., ge=0)
+    image_url: Optional[str] = Field(None, max_length=500)
     is_active: bool = True
 
 class UpdateServicePayload(BaseModel):
@@ -23,6 +25,7 @@ class UpdateServicePayload(BaseModel):
     description: Optional[str] = Field(None, max_length=500)
     duration_minutes: Optional[int] = Field(None, gt=0, le=480)
     price: Optional[int] = Field(None, ge=0)
+    image_url: Optional[str] = Field(None, max_length=500)
     is_active: Optional[bool] = None
 
 class ComboSchema(BaseModel):
@@ -35,6 +38,7 @@ class ComboSchema(BaseModel):
     price: int
     duration_minutes: int
     savings: int
+    image_url: Optional[str] = None
     is_active: bool
 
 class CreateComboPayload(BaseModel):
@@ -42,6 +46,7 @@ class CreateComboPayload(BaseModel):
     description: str = Field("", max_length=500)
     service_ids: List[str] = Field(..., min_length=1)
     price: int = Field(..., ge=0)
+    image_url: Optional[str] = Field(None, max_length=500)
     is_active: bool = True
 
 class UpdateComboPayload(BaseModel):
@@ -49,4 +54,5 @@ class UpdateComboPayload(BaseModel):
     description: Optional[str] = Field(None, max_length=500)
     service_ids: Optional[List[str]] = Field(None, min_length=1)
     price: Optional[int] = Field(None, ge=0)
+    image_url: Optional[str] = Field(None, max_length=500)
     is_active: Optional[bool] = None

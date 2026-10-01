@@ -17,6 +17,7 @@ from src.booking.schemas.booking import (
     CreateTimeOffPayload,
     StatsResponse,
     UpdateAppointmentPayload,
+    UpdateBarberPayload,
     UpdateBookingSettingsPayload,
 )
 
@@ -27,6 +28,16 @@ router = APIRouter(prefix="/bookings", tags=["bookings"])
 async def list_barbers(db: AsyncSession = Depends(get_db)):
     service = BookingDomainService(db)
     return await service.list_barbers()
+
+@router.patch("/barbers/{barber_id}", response_model=BarberSchema)
+async def update_barber(
+    barber_id: str,
+    payload: UpdateBarberPayload,
+    current_user: CurrentUser = Depends(require_role(["admin"])),
+    db: AsyncSession = Depends(get_db),
+):
+    service = BookingDomainService(db)
+    return await service.update_barber(barber_id, payload)
 
 # 2. Availability
 @router.get("/availability", response_model=AvailabilityResponse)

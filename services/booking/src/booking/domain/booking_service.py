@@ -27,6 +27,7 @@ from src.booking.schemas.booking import (
     SlotSchema,
     StatsResponse,
     UpdateAppointmentPayload,
+    UpdateBarberPayload,
     UpdateBookingSettingsPayload,
 )
 
@@ -77,6 +78,23 @@ class BookingDomainService:
                 await self.repo.set_barber_schedules(b.id, schedules)
             models = await self.repo.list_barbers(active_only=True)
         return [BarberSchema.model_validate(m) for m in models]
+
+    async def update_barber(self, barber_id: str, payload: UpdateBarberPayload) -> BarberSchema:
+        barber = await self.repo.get_barber_by_id(barber_id)
+        if not barber:
+            raise NotFoundError(f"Barbero con ID {barber_id} no encontrado")
+
+        if payload.name is not None:
+            barber.name = payload.name.strip()
+        if payload.phone is not None:
+            barber.phone = payload.phone.strip()
+        if payload.avatar_url is not None:
+            barber.avatar_url = payload.avatar_url.strip()
+        if payload.is_active is not None:
+            barber.is_active = payload.is_active
+
+        updated = await self.repo.update_barber(barber)
+        return BarberSchema.model_validate(updated)
 
     # Availability engine
     async def get_availability(

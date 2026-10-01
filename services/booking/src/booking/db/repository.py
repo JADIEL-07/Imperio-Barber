@@ -33,6 +33,11 @@ class BookingRepository:
         await self.db.refresh(barber)
         return barber
 
+    async def update_barber(self, barber: BarberModel) -> BarberModel:
+        await self.db.commit()
+        await self.db.refresh(barber)
+        return barber
+
     # Schedule operations
     async def get_barber_schedules(self, barber_id: str) -> List[BarberScheduleModel]:
         res = await self.db.execute(

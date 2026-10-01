@@ -1,4 +1,4 @@
-﻿from typing import List
+﻿from typing import List, Optional
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Table
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from libs.common.database import Base, BaseModel
@@ -17,6 +17,7 @@ class ServiceModel(BaseModel):
     description: Mapped[str] = mapped_column(String(500), default="", nullable=False)
     duration_minutes: Mapped[int] = mapped_column(Integer, nullable=False)
     price: Mapped[int] = mapped_column(Integer, nullable=False)
+    image_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     combos: Mapped[List["ComboModel"]] = relationship(
@@ -32,6 +33,7 @@ class ComboModel(BaseModel):
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     description: Mapped[str] = mapped_column(String(500), default="", nullable=False)
     price: Mapped[int] = mapped_column(Integer, nullable=False)
+    image_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     services: Mapped[List[ServiceModel]] = relationship(

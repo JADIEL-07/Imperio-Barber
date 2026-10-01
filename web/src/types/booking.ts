@@ -24,6 +24,13 @@ export interface Barber {
   imageUrl?: string;
 }
 
+export interface UpdateBarberPayload {
+  name?: string;
+  phone?: string;
+  avatar_url?: string;
+  is_active?: boolean;
+}
+
 export interface BarberSchedule {
   weekday: number; // 0-6
   start: string;   // "08:00"

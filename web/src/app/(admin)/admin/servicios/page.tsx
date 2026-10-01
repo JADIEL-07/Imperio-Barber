@@ -90,8 +90,19 @@ export default function ServiciosAdminPage() {
               {services.map((s) => (
                 <tr key={s.id} className="border-t border-surface-container-high bg-surface-container-low">
                   <td className="p-space-sm">
-                    <div className="font-body-sm text-body-sm text-on-surface font-semibold">{s.name}</div>
-                    <div className="font-label-xs text-label-xs text-on-surface-variant">{s.description}</div>
+                    <div className="flex items-center gap-space-sm">
+                      {s.image_url ? (
+                        <img src={s.image_url} alt={s.name} className="w-10 h-10 rounded-lg object-cover shrink-0 border border-surface-container-highest" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center shrink-0">
+                          <span className="material-symbols-outlined text-on-surface-variant text-[18px]">content_cut</span>
+                        </div>
+                      )}
+                      <div>
+                        <div className="font-body-sm text-body-sm text-on-surface font-semibold">{s.name}</div>
+                        <div className="font-label-xs text-label-xs text-on-surface-variant">{s.description}</div>
+                      </div>
+                    </div>
                   </td>
                   <td className="p-space-sm font-body-sm text-body-sm text-on-surface">{s.duration_minutes} min</td>
                   <td className="p-space-sm font-body-sm text-body-sm text-primary font-semibold">{formatCOP(s.price)}</td>
@@ -148,6 +159,7 @@ function ServiceModal({
   const [description, setDescription] = useState(editing?.description || "");
   const [duration, setDuration] = useState(editing?.duration_minutes?.toString() || "30");
   const [price, setPrice] = useState(editing?.price?.toString() || "0");
+  const [imageUrl, setImageUrl] = useState(editing?.image_url || "");
   const [isActive, setIsActive] = useState(editing?.is_active ?? true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -169,6 +181,7 @@ function ServiceModal({
           description: description.trim(),
           duration_minutes: durationNum,
           price: priceNum,
+          image_url: imageUrl.trim() || null,
           is_active: isActive,
         });
         onSaved(created);
@@ -178,6 +191,7 @@ function ServiceModal({
           description: description.trim(),
           duration_minutes: durationNum,
           price: priceNum,
+          image_url: imageUrl.trim() || null,
           is_active: isActive,
         });
         onSaved(updated);
@@ -226,6 +240,12 @@ function ServiceModal({
             <label className="font-label-md text-label-md text-on-surface-variant">Precio (COP)</label>
             <input type="number" min={0} step={1000} value={price} onChange={(e) => setPrice(e.target.value)} className="px-space-sm py-space-xs rounded-lg bg-surface-container text-on-surface border border-surface-container-highest" />
           </div>
+        </div>
+
+        <div className="flex flex-col gap-space-xs">
+          <label className="font-label-md text-label-md text-on-surface-variant">URL de imagen (opcional)</label>
+          <input type="url" placeholder="https://..." value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className="px-space-sm py-space-xs rounded-lg bg-surface-container text-on-surface border border-surface-container-highest" />
+          {imageUrl && <img src={imageUrl} alt="Vista previa" className="w-20 h-20 rounded-lg object-cover border border-surface-container-highest" />}
         </div>
 
         <label className="flex items-center gap-space-xs">

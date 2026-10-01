@@ -4,6 +4,7 @@ export interface Service {
   description: string;
   duration_minutes: number;
   price: number;
+  image_url?: string | null;
   is_active: boolean;
 }
 
@@ -15,6 +16,7 @@ export interface Combo {
   price: number;
   duration_minutes: number;
   savings: number;
+  image_url?: string | null;
   is_active: boolean;
 }
 
@@ -23,6 +25,7 @@ export interface CreateServicePayload {
   description?: string;
   duration_minutes: number;
   price: number;
+  image_url?: string | null;
   is_active?: boolean;
 }
 
@@ -31,6 +34,7 @@ export interface UpdateServicePayload {
   description?: string;
   duration_minutes?: number;
   price?: number;
+  image_url?: string | null;
   is_active?: boolean;
 }
 
@@ -39,6 +43,7 @@ export interface CreateComboPayload {
   description?: string;
   service_ids: string[];
   price: number;
+  image_url?: string | null;
   is_active?: boolean;
 }
 
@@ -47,6 +52,7 @@ export interface UpdateComboPayload {
   description?: string;
   service_ids?: string[];
   price?: number;
+  image_url?: string | null;
   is_active?: boolean;
 }
 

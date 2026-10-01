@@ -52,18 +52,23 @@ export default function ServiciosPage() {
           {services.map((s) => (
             <div
               key={s.id}
-              className="flex flex-col justify-between p-space-md rounded-xl bg-surface-container-low border border-surface-container-high hover:bg-surface-container transition-colors"
+              className="flex flex-col justify-between rounded-xl bg-surface-container-low border border-surface-container-high hover:bg-surface-container transition-colors overflow-hidden"
             >
-              <div>
-                <h3 className="font-title-md text-title-md font-bold text-on-surface">{s.name}</h3>
-                <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">{s.description}</p>
-              </div>
-              <div className="flex items-center justify-between mt-space-md pt-space-xs">
-                <span className="font-label-xs text-label-xs text-on-surface-variant flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[14px] text-primary">schedule</span>
-                  {s.duration_minutes} min
-                </span>
-                <span className="font-title-md text-title-md font-bold text-primary">{formatCOP(s.price)}</span>
+              {s.image_url && (
+                <img src={s.image_url} alt={s.name} className="w-full h-40 object-cover" />
+              )}
+              <div className="p-space-md flex flex-col justify-between flex-1">
+                <div>
+                  <h3 className="font-title-md text-title-md font-bold text-on-surface">{s.name}</h3>
+                  <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">{s.description}</p>
+                </div>
+                <div className="flex items-center justify-between mt-space-md pt-space-xs">
+                  <span className="font-label-xs text-label-xs text-on-surface-variant flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[14px] text-primary">schedule</span>
+                    {s.duration_minutes} min
+                  </span>
+                  <span className="font-title-md text-title-md font-bold text-primary">{formatCOP(s.price)}</span>
+                </div>
               </div>
             </div>
           ))}

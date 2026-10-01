@@ -51,25 +51,27 @@ Este documento define el contrato formal e inmutable entre el backend de microse
 ## 3. Microservicio Catalog (`/api/catalog`)
 
 ### Modelos
-- `Service`: `{ id: string, name: string, description: string, duration_minutes: integer, price: integer, is_active: boolean }`
-- `Combo`: `{ id: string, name: string, description: string, services: Service[], price: integer, duration_minutes: integer, savings: integer, is_active: boolean }`
+- `Service`: `{ id: string, name: string, description: string, duration_minutes: integer, price: integer, image_url: string | null, is_active: boolean }`
+- `Combo`: `{ id: string, name: string, description: string, services: Service[], price: integer, duration_minutes: integer, savings: integer, image_url: string | null, is_active: boolean }`
+
+`image_url` es una URL simple que el admin pega (no hay subida de archivos); puede ser `null` si no se definió.
 
 ### Endpoints
 | Método | Ruta | Descripción | Payload | Respuesta |
 |---|---|---|---|---|
 | GET | `/api/catalog/services` | Listar servicios activos (o todos si es admin) | Query: `?all=true` | `Service[]` |
-| POST | `/api/catalog/services` | Crear servicio (Admin) | `{ name, description, duration_minutes, price, is_active }` | `Service` |
-| PATCH | `/api/catalog/services/{id}` | Modificar servicio (Admin) | `{ name?, description?, duration_minutes?, price?, is_active? }` | `Service` |
+| POST | `/api/catalog/services` | Crear servicio (Admin) | `{ name, description, duration_minutes, price, image_url?, is_active }` | `Service` |
+| PATCH | `/api/catalog/services/{id}` | Modificar servicio (Admin) | `{ name?, description?, duration_minutes?, price?, image_url?, is_active? }` | `Service` |
 | GET | `/api/catalog/combos` | Listar combos con cálculo de duración y ahorro | Query: `?all=true` | `Combo[]` |
-| POST | `/api/catalog/combos` | Crear combo (Admin) | `{ name, description, service_ids: string[], price, is_active }` | `Combo` |
-| PATCH | `/api/catalog/combos/{id}` | Modificar combo (Admin) | `{ name?, description?, service_ids?, price?, is_active? }` | `Combo` |
+| POST | `/api/catalog/combos` | Crear combo (Admin) | `{ name, description, service_ids: string[], price, image_url?, is_active }` | `Combo` |
+| PATCH | `/api/catalog/combos/{id}` | Modificar combo (Admin) | `{ name?, description?, service_ids?, price?, image_url?, is_active? }` | `Combo` |
 
 ---
 
 ## 4. Microservicio Booking (`/api/bookings`)
 
 ### Modelos
-- `Barber`: `{ id: string, name: string, phone: string, services: Service[] }`
+- `Barber`: `{ id: string, name: string, phone: string, avatar_url: string | null, services: Service[], is_active: boolean }`
 - `Slot`: `{ start: string, end: string, barber_id: string }`
 - `AppointmentItem`: `{ name: string, duration_minutes: integer, price: integer }`
 - `Appointment`:
@@ -91,6 +93,7 @@ Este documento define el contrato formal e inmutable entre el backend de microse
 | Método | Ruta | Descripción | Payload / Query | Respuesta |
 |---|---|---|---|---|
 | GET | `/api/bookings/barbers` | Listar barberos con servicios que realizan | - | `Barber[]` |
+| PATCH | `/api/bookings/barbers/{id}` | Modificar perfil del barbero (Admin) | `{ name?, phone?, avatar_url?, is_active? }` | `Barber` |
 | GET | `/api/bookings/availability` | Calcular turnos libres según fecha y servicios | Query: `?barber_id=&date=YYYY-MM-DD&service_ids=&combo_id=` | `{ "slots": Slot[] }` |
 | POST | `/api/bookings/appointments` | Agendar cita (retorna 409 si la franja fue ocupada) | `{ barber_id: string, start: string, service_ids?: string[], combo_id?: string }` | `Appointment` |
 | GET | `/api/bookings/appointments` | Listar citas según rol y filtros | Query: `?scope=mine\|barber\|all&status=&from=&to=&page=&page_size=` | `PageResponse<Appointment>` |

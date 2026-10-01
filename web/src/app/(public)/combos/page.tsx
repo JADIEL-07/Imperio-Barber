@@ -54,6 +54,9 @@ export default function CombosPage() {
               key={c.id}
               className="flex flex-col gap-space-sm p-space-lg rounded-xl bg-surface-container-low border border-primary/30"
             >
+              {c.image_url && (
+                <img src={c.image_url} alt={c.name} className="w-full h-40 object-cover rounded-lg -mt-space-xs" />
+              )}
               <div className="flex items-center justify-between">
                 <h3 className="font-title-md text-title-md font-bold text-on-surface">{c.name}</h3>
                 {c.savings > 0 && (

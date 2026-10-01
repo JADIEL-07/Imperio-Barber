@@ -30,6 +30,7 @@ class CatalogDomainService:
             price=combo.price,
             duration_minutes=total_duration,
             savings=savings,
+            image_url=combo.image_url,
             is_active=combo.is_active,
         )
 
@@ -50,6 +51,7 @@ class CatalogDomainService:
             description=payload.description.strip(),
             duration_minutes=payload.duration_minutes,
             price=payload.price,
+            image_url=payload.image_url,
             is_active=payload.is_active,
         )
         saved = await self.repo.create_service(model)
@@ -68,6 +70,8 @@ class CatalogDomainService:
             model.duration_minutes = payload.duration_minutes
         if payload.price is not None:
             model.price = payload.price
+        if payload.image_url is not None:
+            model.image_url = payload.image_url
         if payload.is_active is not None:
             model.is_active = payload.is_active
 
@@ -100,6 +104,7 @@ class CatalogDomainService:
             name=payload.name.strip(),
             description=payload.description.strip(),
             price=payload.price,
+            image_url=payload.image_url,
             is_active=payload.is_active,
             services=services,
         )
@@ -123,6 +128,8 @@ class CatalogDomainService:
             combo.description = payload.description.strip()
         if payload.price is not None:
             combo.price = payload.price
+        if payload.image_url is not None:
+            combo.image_url = payload.image_url
         if payload.is_active is not None:
             combo.is_active = payload.is_active
 

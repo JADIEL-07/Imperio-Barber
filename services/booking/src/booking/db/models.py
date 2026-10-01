@@ -16,6 +16,7 @@ class BarberModel(BaseModel):
 
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     phone: Mapped[str] = mapped_column(String(30), default="", nullable=False)
+    avatar_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     schedules: Mapped[List["BarberScheduleModel"]] = relationship(

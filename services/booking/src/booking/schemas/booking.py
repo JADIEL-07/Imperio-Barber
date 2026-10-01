@@ -28,7 +28,14 @@ class BarberSchema(BaseModel):
     id: str
     name: str
     phone: str
+    avatar_url: Optional[str] = None
     is_active: bool
+
+class UpdateBarberPayload(BaseModel):
+    name: Optional[str] = Field(None, min_length=2, max_length=120)
+    phone: Optional[str] = Field(None, max_length=30)
+    avatar_url: Optional[str] = Field(None, max_length=500)
+    is_active: Optional[bool] = None
 
 class SlotSchema(BaseModel):
     start: str

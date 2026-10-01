@@ -9,16 +9,33 @@ import {
   Appointment,
   CreateAppointmentPayload,
   UpdateAppointmentPayload,
+  UpdateBarberPayload,
   BookingSettings,
   UpdateBookingSettingsPayload,
   StatsResponse,
   PageResponse,
 } from "@/types/booking";
 
+// El backend devuelve el perfil del barbero en snake_case (avatar_url);
+// aquí lo mapeamos una sola vez a la forma que usa la UI (imageUrl).
+function mapBarber(raw: Barber & { avatar_url?: string | null }): Barber {
+  const { avatar_url, ...rest } = raw;
+  return { ...rest, imageUrl: avatar_url || rest.imageUrl };
+}
+
 export const bookingApi = {
   async getBarbers(): Promise<Barber[]> {
     if (USE_MOCKS) return mockBookingApi.getBarbers();
-    return apiClient<Barber[]>("/bookings/barbers");
+    const raw = await apiClient<Array<Barber & { avatar_url?: string | null }>>("/bookings/barbers");
+    return raw.map(mapBarber);
+  },
+
+  async updateBarber(barberId: string, payload: UpdateBarberPayload): Promise<Barber> {
+    const raw = await apiClient<Barber & { avatar_url?: string | null }>(`/bookings/barbers/${barberId}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
+    return mapBarber(raw);
   },
 
   async getAvailability(
