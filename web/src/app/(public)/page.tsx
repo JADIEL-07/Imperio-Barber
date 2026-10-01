@@ -36,10 +36,18 @@ export default function HomePage() {
     <div className="flex flex-col w-full">
       {/* Hero */}
       <div className="w-full relative overflow-hidden bg-surface-container-lowest">
+        <img
+          src="https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=1920&q=70"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full object-cover opacity-40"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-surface-container-lowest via-surface-container-lowest/85 to-surface-container-lowest/40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent" />
         <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-primary-container/10 blur-[100px] pointer-events-none" />
         <div className="absolute top-1/2 -right-32 w-[28rem] h-[28rem] rounded-full bg-tertiary-container/10 blur-[120px] pointer-events-none" />
 
-        <div className="max-w-[1600px] mx-auto px-margin md:px-margin-tablet lg:px-margin-desktop py-space-xl md:py-[6rem] flex flex-col gap-space-lg">
+        <div className="relative max-w-[1600px] mx-auto px-margin md:px-margin-tablet lg:px-margin-desktop py-space-xl md:py-[6rem] flex flex-col gap-space-lg">
           <div className="inline-flex items-center gap-space-xs text-primary font-label-caps text-label-caps uppercase tracking-[0.2em]">
             <span className="w-2 h-2 rounded-full bg-primary animate-ping" />
             Atelier de Barbería • Bogotá Chicó Norte
