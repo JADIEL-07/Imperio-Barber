@@ -1,4 +1,5 @@
 ﻿import React from "react";
+import { LogoMark } from "@/components/ui/Logo";
 
 export const Footer: React.FC = () => {
   return (
@@ -9,7 +10,7 @@ export const Footer: React.FC = () => {
           <div className="flex flex-col gap-space-sm">
             <div className="flex items-center gap-space-sm">
               <div className="w-9 h-9 rounded bg-surface-container-high flex items-center justify-center">
-                <span className="material-symbols-outlined text-primary text-[20px]">content_cut</span>
+                <LogoMark className="w-5 h-5 text-primary" />
               </div>
               <span className="font-headline-sm text-headline-sm font-bold text-on-surface">AURA</span>
             </div>

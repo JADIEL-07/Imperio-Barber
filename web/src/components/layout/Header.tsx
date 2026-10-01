@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { LogoMark } from "@/components/ui/Logo";
 
 const ROLE_HOME: Record<string, { href: string; label: string }> = {
   client: { href: "/mis-citas", label: "Mis Citas" },
@@ -31,7 +32,7 @@ export const Header: React.FC = () => {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-space-md">
           <div className="flex items-center justify-center w-11 h-11 rounded-lg bg-surface-container-high shadow-[0_0_16px_rgba(245,158,11,0.25)]">
-            <span className="material-symbols-outlined text-primary text-[24px]">content_cut</span>
+            <LogoMark className="w-6 h-6 text-primary" />
           </div>
           <div className="flex flex-col">
             <span className="font-headline-sm text-headline-sm font-bold tracking-tight text-on-surface uppercase">
