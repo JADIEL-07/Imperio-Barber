@@ -3,6 +3,7 @@ FROM nginx:1.25-alpine
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY snippets/ /etc/nginx/snippets/
 COPY html/backend-index.html /usr/share/nginx/backend/backend-index.html
+COPY html/api-docs.html /usr/share/nginx/html/api-docs.html
 
 EXPOSE 80
 
