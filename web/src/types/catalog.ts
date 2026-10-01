@@ -1,0 +1,71 @@
+export interface Service {
+  id: string;
+  name: string;
+  description: string;
+  duration_minutes: number;
+  price: number;
+  image_url?: string | null;
+  is_active: boolean;
+}
+
+export interface Combo {
+  id: string;
+  name: string;
+  description: string;
+  services: Service[];
+  price: number;
+  duration_minutes: number;
+  savings: number;
+  image_url?: string | null;
+  is_active: boolean;
+}
+
+export interface CreateServicePayload {
+  name: string;
+  description?: string;
+  duration_minutes: number;
+  price: number;
+  image_url?: string | null;
+  is_active?: boolean;
+}
+
+export interface UpdateServicePayload {
+  name?: string;
+  description?: string;
+  duration_minutes?: number;
+  price?: number;
+  image_url?: string | null;
+  is_active?: boolean;
+}
+
+export interface CreateComboPayload {
+  name: string;
+  description?: string;
+  service_ids: string[];
+  price: number;
+  image_url?: string | null;
+  is_active?: boolean;
+}
+
+export interface UpdateComboPayload {
+  name?: string;
+  description?: string;
+  service_ids?: string[];
+  price?: number;
+  image_url?: string | null;
+  is_active?: boolean;
+}
+
+export interface PageResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface ApiErrorResponse {
+  error: {
+    code: string;
+    message: string;
+  };
+}
