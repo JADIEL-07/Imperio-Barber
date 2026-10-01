@@ -5,6 +5,7 @@ from libs.common.database import Base
 from libs.common.errors import setup_exception_handlers
 from libs.common.logging import setup_logging
 from src.booking.api.router import router as booking_router
+from src.booking.config import get_settings
 from src.booking.db.session import engine
 
 logger = setup_logging("booking_service")
@@ -28,7 +29,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=get_settings().cors_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

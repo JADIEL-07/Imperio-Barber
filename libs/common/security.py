@@ -52,24 +52,36 @@ def decode_session_token(token: str) -> Optional[CurrentUser]:
     except (jwt.PyJWTError, KeyError):
         return None
 
+def _session_cookie_attrs() -> Dict[str, Any]:
+    """
+    En producción, frontend y backend pueden vivir en dominios distintos
+    (ej. app.midominio.com / api.midominio.com), así que la cookie debe
+    viajar cross-site: eso exige SameSite=None, y los navegadores solo
+    aceptan SameSite=None si la cookie además es Secure (HTTPS).
+    En desarrollo local (mismo origen, HTTP) usamos Lax, que no requiere HTTPS.
+    """
+    is_production = os.getenv("ENVIRONMENT") == "production"
+    return {
+        "secure": is_production,
+        "samesite": "none" if is_production else "lax",
+    }
+
 def set_session_cookie(response: Response, token: str) -> None:
     response.set_cookie(
         key=SESSION_COOKIE_NAME,
         value=token,
         httponly=True,
-        secure=os.getenv("ENVIRONMENT") == "production",
-        samesite="lax",
         max_age=7 * 24 * 3600,
         path="/",
+        **_session_cookie_attrs(),
     )
 
 def clear_session_cookie(response: Response) -> None:
     response.delete_cookie(
         key=SESSION_COOKIE_NAME,
         httponly=True,
-        secure=os.getenv("ENVIRONMENT") == "production",
-        samesite="lax",
         path="/",
+        **_session_cookie_attrs(),
     )
 
 from libs.common.errors import ForbiddenError, UnauthorizedError

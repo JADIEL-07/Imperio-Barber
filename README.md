@@ -81,9 +81,40 @@ externo como Traefik/Coolify, que debe apuntar al servicio `gateway`, puerto `80
 | `web`             | Next.js standalone, puerto interno 3000                           |
 | `gateway`         | nginx; único contenedor expuesto. Reparte `/api/auth`→auth, `/api/catalog`→catalog, `/api/bookings`→booking, resto→web |
 
-Pasos:
+Pasos (un solo dominio):
 
 1. Copia `.env.production.example` a `.env` y ajusta `POSTGRES_PASSWORD` y `SESSION_SECRET`.
 2. `docker compose build && docker compose up -d` (o `make deploy` para forzar rebuild sin caché).
 3. Configura tu proxy/Coolify para enrutar el dominio público al contenedor `gateway`, puerto `80`.
 4. Verifica `GET /health` a través del gateway antes de validar las rutas de la app.
+
+### Variante: frontend y backend en dominios distintos
+
+También se puede desplegar con dos dominios (ej. `app.tudominio.com` para el frontend y
+`api.tudominio.com` para el backend). Esto exige que la cookie de sesión y el CORS viajen
+cross-site, así que hay soporte explícito para ello en el código:
+
+- `libs/common/security.py`: en `ENVIRONMENT=production` la cookie de sesión se pone con
+  `SameSite=None; Secure` (en vez de `Lax`) para que el navegador la mande entre dominios
+  distintos. Requiere HTTPS en ambos dominios (Coolify + Let's Encrypt ya lo da).
+- Cada microservicio (`auth`, `catalog`, `booking`) lee `CORS_ORIGINS` (lista separada por
+  comas) para `allow_origins` del `CORSMiddleware`, en vez de tener `localhost` fijo.
+
+Pasos adicionales para esta variante:
+
+1. Domain A (frontend) → servicio **`web`**, puerto `3000`.
+2. Domain B (backend) → servicio **`gateway`**, puerto `80` (sigue siendo el único que sabe
+   repartir entre `auth-service`/`catalog-service`/`booking-service`; visitar la raíz `/` de
+   este dominio seguirá sirviendo el frontend también — es inofensivo, solo cosmético).
+3. En las variables de entorno:
+   ```bash
+   NEXT_PUBLIC_API_URL=https://api.tudominio.com/api   # URL absoluta, no relativa
+   CORS_ORIGINS=https://app.tudominio.com              # origen exacto del frontend, sin / final
+   ```
+4. Si cambias `NEXT_PUBLIC_API_URL` después de un primer deploy, hay que forzar rebuild de la
+   imagen `web` (es un `ARG` de build, no una variable de runtime).
+
+⚠️ Riesgo a tener en cuenta: algunos navegadores (Safari con ITP, y Chrome a futuro) restringen
+cookies "de terceros" aunque tengan `SameSite=None; Secure`, si los dos dominios no están
+relacionados. Es más confiable usar subdominios de un mismo dominio raíz (`app.midominio.com` /
+`api.midominio.com`) que dos dominios completamente distintos.
