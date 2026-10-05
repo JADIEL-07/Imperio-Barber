@@ -10,6 +10,15 @@ on:
   workflow_dispatch:
 
 jobs:
+  docker-web:
+    # Verifica que la imagen de producción (flutter/Dockerfile) construya antes de desplegar.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build de la imagen flutter-web
+        run: docker build -t imperio-flutter-web ./flutter
+
+
   analyze-and-build:
     runs-on: ubuntu-latest
     defaults:
