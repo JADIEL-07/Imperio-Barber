@@ -1,9 +1,24 @@
 # Stage 1: compilar Flutter Web (el build queda en /app/build/web)
-FROM ghcr.io/cirruslabs/flutter:stable AS build
+# Se instala la misma versión de Flutter que usa el CI (.github/workflows/flutter.yml).
+# La imagen ghcr.io/cirruslabs/flutter:stable ya no se actualiza (su última versión es 3.29)
+# y no cumple las versiones de Dart que exige el proyecto.
+FROM debian:bookworm-slim AS build
+ARG FLUTTER_VERSION=3.47.6
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends git curl unzip xz-utils ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+
+RUN git clone --depth 1 --branch "${FLUTTER_VERSION}" https://github.com/flutter/flutter.git /sdks/flutter
+ENV PATH="/sdks/flutter/bin:${PATH}"
+
+RUN flutter config --no-analytics \
+ && flutter precache --web
+
 WORKDIR /app
 
 COPY pubspec.yaml analysis_options.yaml ./
-RUN flutter config --no-analytics && flutter pub get
+RUN flutter pub get
 
 COPY . .
 RUN flutter build web --release
