@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/api_client.dart';
@@ -148,7 +147,7 @@ class _BarberHeader extends StatelessWidget {
                         Text(b.phone, style: const TextStyle(color: AppColors.onSurfaceVariant)),
                       Text(
                         'Comisión: ${formatPercent(b.commissionRate)}',
-                        style: GoogleFonts.jetBrainsMono(color: AppColors.primary, fontSize: 12),
+                        style: AppFonts.mono(color: AppColors.primary, fontSize: 12),
                       ),
                     ],
                   ),

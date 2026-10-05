@@ -26,6 +26,18 @@ class AppColors {
   static const Color success = Color(0xFF10B981);
 }
 
+/// Fuentes de la marca. `useGoogleFonts` se apaga en las pruebas de widgets para
+/// no descargar fuentes por red (google_fonts lanza error si no puede cargarlas).
+class AppFonts {
+  AppFonts._();
+
+  static bool useGoogleFonts = true;
+
+  static TextStyle mono({Color? color, double? fontSize}) => useGoogleFonts
+      ? GoogleFonts.jetBrainsMono(color: color, fontSize: fontSize)
+      : TextStyle(color: color, fontSize: fontSize, fontFamily: 'monospace');
+}
+
 class AppTheme {
   AppTheme._();
 
@@ -52,8 +64,12 @@ class AppTheme {
       surfaceContainerHighest: AppColors.surfaceHighest,
     );
 
-    final outfit = GoogleFonts.outfitTextTheme(base.textTheme);
-    final hanken = GoogleFonts.hankenGroteskTextTheme(base.textTheme);
+    final outfit = AppFonts.useGoogleFonts
+        ? GoogleFonts.outfitTextTheme(base.textTheme)
+        : base.textTheme;
+    final hanken = AppFonts.useGoogleFonts
+        ? GoogleFonts.hankenGroteskTextTheme(base.textTheme)
+        : base.textTheme;
 
     final textTheme = hanken
         .copyWith(
