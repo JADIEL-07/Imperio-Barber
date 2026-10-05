@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 ///
 /// En móvil (o en desarrollo local) se define con:
 ///   flutter run --dart-define=API_BASE_URL=https://flutter.imperio.newonline.digital/api
-/// En el emulador de Android, localhost es el propio emulador: usa http://10.0.2.2:<puerto>.
+/// En el emulador de Android, localhost es el propio emulador: usa http://10.0.2.2:[puerto].
 class Env {
   Env._();
 

@@ -21,9 +21,9 @@ class ApiException implements Exception {
 /// Cliente HTTP único. La sesión va por cookie httpOnly (session_token):
 /// en web el navegador la gestiona solo; en móvil se guarda en memoria.
 class ApiClient {
-  ApiClient({required Dio dio}) : _dio = dio;
+  ApiClient({required this.dio});
 
-  final Dio _dio;
+  final Dio dio;
 
   /// Crea el cliente con la sesión lista. En Android/iOS las cookies se guardan en disco,
   /// así la sesión sigue activa al cerrar y volver a abrir la app. En web las gestiona el navegador.
@@ -65,7 +65,7 @@ class ApiClient {
     Map<String, dynamic>? query,
   }) async {
     try {
-      final response = await _dio.request<dynamic>(
+      final response = await dio.request<dynamic>(
         path,
         data: body,
         queryParameters: query,

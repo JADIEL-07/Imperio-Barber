@@ -448,7 +448,7 @@ class _CancellationAlert extends StatelessWidget {
   }
 }
 
-/// Boleto con código QR (AppointmentTicket.tsx). El QR codifica IMPERIO-CHECKIN:<id>.
+/// Boleto con código QR (AppointmentTicket.tsx). El QR codifica IMPERIO-CHECKIN:[id].
 class AppointmentTicket extends StatelessWidget {
   const AppointmentTicket({super.key, required this.appointment, required this.onCheckIn, required this.checkingIn});
 
