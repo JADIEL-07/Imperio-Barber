@@ -1,0 +1,12 @@
+{
+  "name": "Imperio Barber",
+  "short_name": "Imperio",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#111317",
+  "theme_color": "#111317",
+  "description": "Reserva tu cita en Imperio Barber: cortes, rituales de afeitado y gestión de barberos.",
+  "orientation": "portrait-primary",
+  "prefer_related_applications": false,
+  "icons": []
+}

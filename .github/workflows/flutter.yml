@@ -1,0 +1,47 @@
+name: Flutter (analyze y build)
+
+on:
+  push:
+    branches: [flutter-app]
+  pull_request:
+    paths:
+      - "flutter/**"
+      - ".github/workflows/flutter.yml"
+  workflow_dispatch:
+
+jobs:
+  analyze-and-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: flutter
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Dependencias
+        run: flutter pub get
+
+      - name: Analizar código
+        run: flutter analyze
+
+      - name: Build web
+        run: flutter build web --release
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Build APK (release)
+        run: flutter build apk --release --dart-define=API_BASE_URL=https://flutter.imperio.newonline.digital/api
+
+      - name: Subir APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: imperio-barber-apk
+          path: flutter/build/app/outputs/flutter-apk/app-release.apk
