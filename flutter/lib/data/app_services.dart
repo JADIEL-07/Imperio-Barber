@@ -1,4 +1,4 @@
-import '../core/apiclient.dart';
+import '../core/api_client.dart';
 import '../models/models.dart';
 
 /// Acceso a todos los endpoints de la API (auth, catalog y booking).
