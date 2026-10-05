@@ -21,7 +21,7 @@ class MyAppointmentsPage extends StatefulWidget {
 }
 
 class _MyAppointmentsPageState extends State<MyAppointmentsPage> {
-  late Future<Page<Appointment>> _future;
+  late Future<PageResponse<Appointment>> _future;
   bool _showHistory = false;
   String? _lockAlertFor;
   String? _actionError;
@@ -33,7 +33,7 @@ class _MyAppointmentsPageState extends State<MyAppointmentsPage> {
     _future = _load();
   }
 
-  Future<Page<Appointment>> _load() =>
+  Future<PageResponse<Appointment>> _load() =>
       context.read<AppServices>().appointments(scope: 'mine', pageSize: 50);
 
   void _reload() => setState(() => _future = _load());
@@ -88,7 +88,7 @@ class _MyAppointmentsPageState extends State<MyAppointmentsPage> {
   Widget build(BuildContext context) {
     return ContentScroll(
       children: [
-        AsyncContent<Page<Appointment>>(
+        AsyncContent<PageResponse<Appointment>>(
           future: _future,
           onRetry: _reload,
           builder: (page) {

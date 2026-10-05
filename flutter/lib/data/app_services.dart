@@ -49,7 +49,7 @@ class AppServices {
     return AppUser.fromJson(_map(res));
   }
 
-  Future<Page<AppUser>> listUsers({
+  Future<PageResponse<AppUser>> listUsers({
     String? role,
     String? search,
     int page = 1,
@@ -61,7 +61,7 @@ class AppServices {
       if (role != null && role.isNotEmpty) 'role': role,
       if (search != null && search.isNotEmpty) 'search': search,
     });
-    return Page.fromJson(_map(res), AppUser.fromJson);
+    return PageResponse.fromJson(_map(res), AppUser.fromJson);
   }
 
   Future<AppUser> createUser({
@@ -149,7 +149,7 @@ class AppServices {
     return Appointment.fromJson(_map(res));
   }
 
-  Future<Page<Appointment>> appointments({
+  Future<PageResponse<Appointment>> appointments({
     String scope = 'mine',
     String? status,
     String? from,
@@ -165,7 +165,7 @@ class AppServices {
       if (from != null) 'from': from,
       if (to != null) 'to': to,
     });
-    return Page.fromJson(_map(res), Appointment.fromJson);
+    return PageResponse.fromJson(_map(res), Appointment.fromJson);
   }
 
   Future<Appointment> updateAppointment(String id, {String? status, String? start}) async {

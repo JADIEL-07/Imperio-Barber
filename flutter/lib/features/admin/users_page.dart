@@ -26,7 +26,7 @@ class _UsersPageState extends State<UsersPage> {
   String _role = '';
   int _page = 1;
   String? _actionError;
-  late Future<Page<AppUser>> _future;
+  late Future<PageResponse<AppUser>> _future;
 
   @override
   void initState() {
@@ -40,7 +40,7 @@ class _UsersPageState extends State<UsersPage> {
     super.dispose();
   }
 
-  Future<Page<AppUser>> _load() => context.read<AppServices>().listUsers(
+  Future<PageResponse<AppUser>> _load() => context.read<AppServices>().listUsers(
         role: _role,
         search: _search.text.trim(),
         page: _page,
@@ -121,7 +121,7 @@ class _UsersPageState extends State<UsersPage> {
           MessageBanner(_actionError!),
           const SizedBox(height: 12),
         ],
-        AsyncContent<Page<AppUser>>(
+        AsyncContent<PageResponse<AppUser>>(
           future: _future,
           onRetry: _refresh,
           builder: (page) {

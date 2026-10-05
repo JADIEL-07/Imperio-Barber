@@ -388,7 +388,7 @@ class AppFooter extends StatelessWidget {
                 const SizedBox(height: 8),
                 _FooterLine(icon: Icons.location_on, text: 'Calle 94 # 11A - 28, Chicó Norte, Bogotá D.C.', style: muted),
                 _FooterLine(icon: Icons.call, text: '+57 (601) 745-9820', style: muted),
-                _FooterLine(icon: Icons.concierge, text: 'Valet Parking disponible', style: muted),
+                _FooterLine(icon: Icons.local_parking, text: 'Valet Parking disponible', style: muted),
               ]),
               column([
                 Text('Horario de Atención', style: strong),

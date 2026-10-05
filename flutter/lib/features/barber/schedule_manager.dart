@@ -10,11 +10,9 @@ import '../../ui/dialogs.dart';
 import '../../ui/widgets.dart';
 
 class _DayRow {
-  _DayRow({this.enabled = false, this.start = '08:00', this.end = '20:00'});
-
-  bool enabled;
-  String start;
-  String end;
+  bool enabled = false;
+  String start = '08:00';
+  String end = '20:00';
 }
 
 /// Horario semanal + bloqueos de un barbero (ScheduleManager.tsx).

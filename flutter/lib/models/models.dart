@@ -9,10 +9,10 @@ String _str(Object? v) => v as String? ?? '';
 List<T> _list<T>(Object? v, T Function(Map<String, dynamic>) fromJson) =>
     ((v as List?) ?? const []).map((e) => fromJson(e as Map<String, dynamic>)).toList();
 
-class Page<T> {
-  const Page({required this.items, required this.total, required this.page, required this.pageSize});
+class PageResponse<T> {
+  const PageResponse({required this.items, required this.total, required this.page, required this.pageSize});
 
-  factory Page.fromJson(Map<String, dynamic> j, T Function(Map<String, dynamic>) fromJson) => Page(
+  factory PageResponse.fromJson(Map<String, dynamic> j, T Function(Map<String, dynamic>) fromJson) => PageResponse(
         items: _list(j['items'], fromJson),
         total: _int(j['total']),
         page: _int(j['page']),
