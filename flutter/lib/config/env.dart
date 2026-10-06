@@ -16,4 +16,8 @@ class Env {
     if (kIsWeb) return Uri.base.resolve('/api').toString();
     return 'https://flutter.imperio.newonline.digital/api';
   }
+
+  /// Última versión del APK publicada en GitHub Releases (nombre de archivo fijo).
+  static const String androidApkUrl =
+      'https://github.com/JADIEL-07/Imperio-Barber/releases/latest/download/imperio-barber.apk';
 }

@@ -1,4 +1,5 @@
 import React from "react";
+import { ANDROID_APK_URL } from "@/lib/app-download";
 import { LogoMark } from "@/components/ui/Logo";
 
 export const Footer: React.FC = () => {
@@ -23,6 +24,13 @@ export const Footer: React.FC = () => {
                 Reservas en línea 24/7
               </span>
             </div>
+            <a
+              href={ANDROID_APK_URL}
+              className="inline-flex w-fit items-center gap-space-xs px-space-sm py-space-xs rounded border border-primary text-primary font-label-xs text-label-xs hover:bg-primary/10 transition-colors"
+            >
+              <span className="material-symbols-outlined text-[18px]">android</span>
+              Descargar para Android
+            </a>
           </div>
 
           {/* Location Col */}
