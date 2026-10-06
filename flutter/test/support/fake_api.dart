@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:ui' show Size;
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
