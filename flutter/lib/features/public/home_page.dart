@@ -211,6 +211,7 @@ class _Hero extends StatelessWidget {
                     child: const Text('Ver Servicios', style: TextStyle(fontWeight: FontWeight.w700)),
                   ),
                   const AndroidDownloadButton(),
+                  const IosDownloadButton(),
                 ],
               ),
             ],

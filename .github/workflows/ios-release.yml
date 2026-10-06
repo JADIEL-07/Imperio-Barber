@@ -1,0 +1,154 @@
+name: iOS IPA (release)
+
+# Compila flutter/ para iOS en un runner macOS y adjunta el .ipa a la misma GitHub Release que el APK.
+#  - Sin secrets: IPA SIN FIRMAR (imperio-barber-unsigned.ipa). Se instala re-firmándolo con
+#    AltStore / Sideloadly / SideStore usando un Apple ID gratuito (caduca a los 7 días).
+#  - Con secrets de Apple Developer (99 USD/año): IPA FIRMADO (imperio-barber.ipa) para
+#    TestFlight / Ad Hoc, y subida opcional a TestFlight.
+# Uso: git tag v0.1.0 && git push origin v0.1.0   (o ejecutar a mano desde Actions)
+#
+# Secrets para firmar (todos opcionales; si falta IOS_CERT_P12_BASE64 se genera el IPA sin firmar):
+#   IOS_CERT_P12_BASE64      certificado de distribución (.p12) en base64
+#   IOS_CERT_PASSWORD        contraseña del .p12
+#   IOS_PROFILE_BASE64       provisioning profile (.mobileprovision) en base64
+#   IOS_PROFILE_NAME         nombre del profile tal como aparece en el portal de Apple
+#   IOS_TEAM_ID              Team ID de Apple Developer
+#   IOS_EXPORT_METHOD        app-store | ad-hoc | development   (por defecto app-store)
+#   APPSTORE_API_KEY_ID, APPSTORE_API_ISSUER_ID, APPSTORE_API_KEY_P8_BASE64   (solo para TestFlight)
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag de la release (ej. v0.1.0)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  ios:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: flutter
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+      API_BASE_URL: https://flutter.imperio.newonline.digital/api
+      BUNDLE_ID: com.imperiobarber.app
+      SIGN: ${{ secrets.IOS_CERT_P12_BASE64 != '' && 'true' || 'false' }}
+      TESTFLIGHT: ${{ secrets.APPSTORE_API_KEY_ID != '' && 'true' || 'false' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Generar proyecto iOS (si no existe flutter/ios)
+        # `flutter create` no pisa archivos existentes; solo añade lo que falta.
+        run: |
+          flutter create --platforms=ios --org com.imperiobarber --project-name imperio_barber .
+          # Mismo identificador que en Android
+          sed -i '' "s/com\.imperiobarber\.imperioBarber/${BUNDLE_ID}/g" ios/Runner.xcodeproj/project.pbxproj
+          /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName Imperio Barber" ios/Runner/Info.plist
+          # Plantilla de test que genera `flutter create`; los tests reales corren en flutter.yml
+          git ls-files --error-unmatch test/widget_test.dart >/dev/null 2>&1 || rm -f test/widget_test.dart
+
+      - name: Guardar flutter/ios generado (para commitearlo al repo)
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-ios-folder
+          path: flutter/ios
+
+      - name: Dependencias
+        run: flutter pub get
+
+      # ---------- Sin firmar ----------
+      - name: Build iOS sin firma
+        if: env.SIGN != 'true'
+        run: >
+          flutter build ios --release --no-codesign
+          --build-name="${TAG#v}" --build-number="$GITHUB_RUN_NUMBER"
+          --dart-define=API_BASE_URL="$API_BASE_URL"
+
+      - name: Empaquetar IPA sin firmar
+        if: env.SIGN != 'true'
+        run: |
+          rm -rf Payload && mkdir Payload
+          cp -R build/ios/iphoneos/Runner.app Payload/
+          zip -qry imperio-barber-unsigned.ipa Payload
+
+      # ---------- Firmado ----------
+      - name: Instalar certificado y provisioning profile
+        if: env.SIGN == 'true'
+        env:
+          CERT_P12_BASE64: ${{ secrets.IOS_CERT_P12_BASE64 }}
+          CERT_PASSWORD: ${{ secrets.IOS_CERT_PASSWORD }}
+          PROFILE_BASE64: ${{ secrets.IOS_PROFILE_BASE64 }}
+        run: |
+          KEYCHAIN="$RUNNER_TEMP/build.keychain-db"
+          KEYCHAIN_PASSWORD="$(uuidgen)"
+          echo "$CERT_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security import "$RUNNER_TEMP/cert.p12" -P "$CERT_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN"
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security list-keychains -d user -s "$KEYCHAIN" login.keychain
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          echo "$PROFILE_BASE64" | base64 --decode \
+            > "$HOME/Library/MobileDevice/Provisioning Profiles/imperio.mobileprovision"
+
+      - name: ExportOptions.plist
+        if: env.SIGN == 'true'
+        env:
+          TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+          PROFILE_NAME: ${{ secrets.IOS_PROFILE_NAME }}
+          EXPORT_METHOD: ${{ secrets.IOS_EXPORT_METHOD || 'app-store' }}
+        run: |
+          cat > ExportOptions.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>${EXPORT_METHOD}</string>
+            <key>teamID</key><string>${TEAM_ID}</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>provisioningProfiles</key><dict><key>${BUNDLE_ID}</key><string>${PROFILE_NAME}</string></dict>
+          </dict></plist>
+          EOF
+
+      - name: Build IPA firmado
+        if: env.SIGN == 'true'
+        run: >
+          flutter build ipa --release --export-options-plist=ExportOptions.plist
+          --build-name="${TAG#v}" --build-number="$GITHUB_RUN_NUMBER"
+          --dart-define=API_BASE_URL="$API_BASE_URL"
+
+      - name: Nombre fijo del IPA firmado
+        if: env.SIGN == 'true'
+        run: cp build/ios/ipa/*.ipa imperio-barber.ipa
+
+      - name: Subir a TestFlight
+        if: env.SIGN == 'true' && env.TESTFLIGHT == 'true'
+        env:
+          API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.APPSTORE_API_ISSUER_ID }}
+          API_KEY_P8_BASE64: ${{ secrets.APPSTORE_API_KEY_P8_BASE64 }}
+        run: |
+          mkdir -p "$HOME/.appstoreconnect/private_keys"
+          echo "$API_KEY_P8_BASE64" | base64 --decode > "$HOME/.appstoreconnect/private_keys/AuthKey_${API_KEY_ID}.p8"
+          xcrun altool --upload-app --type ios --file imperio-barber.ipa \
+            --apiKey "$API_KEY_ID" --apiIssuer "$API_ISSUER_ID"
+
+      - name: Publicar en la release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          files: |
+            flutter/imperio-barber-unsigned.ipa
+            flutter/imperio-barber.ipa
+          fail_on_unmatched_files: false
+          generate_release_notes: true

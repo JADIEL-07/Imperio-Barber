@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { ANDROID_APK_URL } from "@/lib/app-download";
+import { ANDROID_APK_URL, IOS_IPA_URL } from "@/lib/app-download";
 import { catalogApi } from "@/lib/api/catalog";
 import { Service, Combo } from "@/types/catalog";
 import { formatCOP } from "@/lib/format";
@@ -80,6 +80,13 @@ export default function HomePage() {
             >
               <span className="material-symbols-outlined text-[18px]">android</span>
               Descargar para Android
+            </a>
+            <a
+              href={IOS_IPA_URL}
+              className="inline-flex items-center gap-2 px-space-xl py-space-sm border border-primary text-primary font-label-lg text-label-lg rounded-lg font-bold hover:bg-primary/10 transition-all"
+            >
+              <span className="material-symbols-outlined text-[18px]">phone_iphone</span>
+              Descargar para iOS
             </a>
           </div>
         </div>
