@@ -383,7 +383,7 @@ class AppFooter extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 const Tag('Reservas en línea 24/7', color: AppColors.surfaceHigh, textColor: AppColors.primary),
-                if (kIsWeb) ...[const SizedBox(height: 12), const AndroidDownloadButton()],
+                if (kIsWeb) ...[const SizedBox(height: 12), const AndroidDownloadButton(), const SizedBox(height: 8), const IosDownloadButton()],
               ]),
               column([
                 Text('Sede Central', style: strong),

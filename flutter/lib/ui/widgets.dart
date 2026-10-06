@@ -453,3 +453,23 @@ class AndroidDownloadButton extends StatelessWidget {
     );
   }
 }
+
+/// Botón "Descargar para iOS". Igual que el de Android, solo en la versión web.
+class IosDownloadButton extends StatelessWidget {
+  const IosDownloadButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    if (!kIsWeb) return const SizedBox.shrink();
+    return OutlinedButton.icon(
+      onPressed: () => launchUrl(Uri.parse(Env.iosIpaUrl), webOnlyWindowName: '_self'),
+      icon: const Icon(Icons.phone_iphone, size: 20),
+      label: const Text('Descargar para iOS', style: TextStyle(fontWeight: FontWeight.w700)),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: AppColors.primary,
+        side: const BorderSide(color: AppColors.primary),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      ),
+    );
+  }
+}

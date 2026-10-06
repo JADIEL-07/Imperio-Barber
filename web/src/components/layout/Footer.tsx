@@ -1,5 +1,5 @@
 import React from "react";
-import { ANDROID_APK_URL } from "@/lib/app-download";
+import { ANDROID_APK_URL, IOS_IPA_URL } from "@/lib/app-download";
 import { LogoMark } from "@/components/ui/Logo";
 
 export const Footer: React.FC = () => {
@@ -30,6 +30,13 @@ export const Footer: React.FC = () => {
             >
               <span className="material-symbols-outlined text-[18px]">android</span>
               Descargar para Android
+            </a>
+            <a
+              href={IOS_IPA_URL}
+              className="inline-flex w-fit items-center gap-space-xs px-space-sm py-space-xs rounded border border-primary text-primary font-label-xs text-label-xs hover:bg-primary/10 transition-colors"
+            >
+              <span className="material-symbols-outlined text-[18px]">phone_iphone</span>
+              Descargar para iOS
             </a>
           </div>
 

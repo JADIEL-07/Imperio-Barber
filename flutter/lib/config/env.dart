@@ -20,4 +20,8 @@ class Env {
   /// Última versión del APK publicada en GitHub Releases (nombre de archivo fijo).
   static const String androidApkUrl =
       'https://github.com/JADIEL-07/Imperio-Barber/releases/latest/download/imperio-barber.apk';
+
+  /// Última versión del IPA de iOS (sin firmar: se instala con AltStore/Sideloadly).
+  static const String iosIpaUrl =
+      'https://github.com/JADIEL-07/Imperio-Barber/releases/latest/download/imperio-barber-unsigned.ipa';
 }
