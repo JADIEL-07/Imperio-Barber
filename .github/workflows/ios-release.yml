@@ -54,14 +54,11 @@ jobs:
           # Mismo identificador que en Android
           sed -i '' "s/com\.imperiobarber\.imperioBarber/${BUNDLE_ID}/g" ios/Runner.xcodeproj/project.pbxproj
           /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName Imperio Barber" ios/Runner/Info.plist
+          # Plantilla de test que genera `flutter create`; los tests reales corren en flutter.yml
+          git ls-files --error-unmatch test/widget_test.dart >/dev/null 2>&1 || rm -f test/widget_test.dart
 
       - name: Dependencias
         run: flutter pub get
-
-      - name: Analizar y probar
-        run: |
-          flutter analyze
-          flutter test
 
       # ---------- Sin firmar ----------
       - name: Build iOS sin firma
