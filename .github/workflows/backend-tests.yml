@@ -1,0 +1,35 @@
+name: Backend (pytest)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - "services/**"
+      - "libs/**"
+      - ".github/workflows/backend-tests.yml"
+  workflow_dispatch:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Un job por servicio: cada uno tiene su propio paquete `src` y no pueden compartir proceso.
+        service: [auth, catalog, booking]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: services/${{ matrix.service }}/pyproject.toml
+
+      - name: Instalar dependencias del servicio
+        run: pip install -e "services/${{ matrix.service }}[test]"
+
+      - name: Pruebas unitarias, de contrato y de modelos
+        working-directory: services/${{ matrix.service }}
+        run: pytest tests -p no:cacheprovider

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -382,6 +383,7 @@ class AppFooter extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 const Tag('Reservas en línea 24/7', color: AppColors.surfaceHigh, textColor: AppColors.primary),
+                if (kIsWeb) ...[const SizedBox(height: 12), const AndroidDownloadButton()],
               ]),
               column([
                 Text('Sede Central', style: strong),

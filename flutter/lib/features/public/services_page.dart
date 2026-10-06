@@ -24,7 +24,7 @@ class _ServicesPageState extends State<ServicesPage> {
     _future = context.read<AppServices>().services();
   }
 
-  void _reload() => setState(() => _future = context.read<AppServices>().services());
+  void _reload() => setState(() { _future = context.read<AppServices>().services(); });
 
   @override
   Widget build(BuildContext context) {

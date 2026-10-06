@@ -1,5 +1,8 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../config/env.dart';
 import '../core/theme.dart';
 
 /// Marca de Imperio Barber: la misma estrella de 8 puntas que LogoMark en web.
@@ -166,13 +169,17 @@ class Tag extends StatelessWidget {
             Icon(icon, size: 12, color: textColor),
             const SizedBox(width: 4),
           ],
-          Text(
-            text.toUpperCase(),
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
-              color: textColor,
+          // Flexible: en pantallas estrechas el texto se corta en vez de desbordar la fila.
+          Flexible(
+            child: Text(
+              text.toUpperCase(),
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+                color: textColor,
+              ),
             ),
           ),
         ],
@@ -422,6 +429,26 @@ class NetworkImageBox extends StatelessWidget {
         url,
         fit: BoxFit.cover,
         errorBuilder: (_, _, _) => const ColoredBox(color: AppColors.surfaceHigh),
+      ),
+    );
+  }
+}
+
+/// Botón "Descargar para Android". Solo se muestra en la versión web: dentro de la app ya instalada sobra.
+class AndroidDownloadButton extends StatelessWidget {
+  const AndroidDownloadButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    if (!kIsWeb) return const SizedBox.shrink();
+    return OutlinedButton.icon(
+      onPressed: () => launchUrl(Uri.parse(Env.androidApkUrl), webOnlyWindowName: '_self'),
+      icon: const Icon(Icons.android, size: 20),
+      label: const Text('Descargar para Android', style: TextStyle(fontWeight: FontWeight.w700)),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: AppColors.primary,
+        side: const BorderSide(color: AppColors.primary),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       ),
     );
   }

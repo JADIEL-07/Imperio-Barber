@@ -29,7 +29,7 @@ class _ServicesAdminPageState extends State<ServicesAdminPage> {
     _future = context.read<AppServices>().services(all: true);
   }
 
-  void _refresh() => setState(() => _future = context.read<AppServices>().services(all: true));
+  void _refresh() => setState(() { _future = context.read<AppServices>().services(all: true); });
 
   Future<void> _toggleActive(Service s) async {
     setState(() => _actionError = null);

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/api_client.dart';
@@ -31,7 +30,7 @@ class _BarbersPageState extends State<BarbersPage> {
     _future = context.read<AppServices>().barbers();
   }
 
-  void _refresh() => setState(() => _future = context.read<AppServices>().barbers());
+  void _refresh() => setState(() { _future = context.read<AppServices>().barbers(); });
 
   Future<void> _editPhoto(Barber barber) async {
     await showDialog<void>(context: context, builder: (_) => _PhotoDialog(barber: barber));
@@ -148,7 +147,7 @@ class _BarberHeader extends StatelessWidget {
                         Text(b.phone, style: const TextStyle(color: AppColors.onSurfaceVariant)),
                       Text(
                         'Comisión: ${formatPercent(b.commissionRate)}',
-                        style: GoogleFonts.jetBrainsMono(color: AppColors.primary, fontSize: 12),
+                        style: AppFonts.mono(color: AppColors.primary, fontSize: 12),
                       ),
                     ],
                   ),
@@ -305,7 +304,7 @@ class _CommissionDialogState extends State<_CommissionDialog> {
 
   Future<CommissionSummary> _loadSummary() => context.read<AppServices>().commissions(widget.barber.id);
 
-  void _reloadSummary() => setState(() => _summary = _loadSummary());
+  void _reloadSummary() => setState(() { _summary = _loadSummary(); });
 
   Future<void> _saveRate() async {
     final pct = double.tryParse(_rate.text.trim());

@@ -37,24 +37,32 @@ from src.booking.schemas.booking import (
 
 BOGOTA_TZ = timezone(timedelta(hours=-5))
 
+
+def _como_bogota(dt: datetime) -> datetime:
+    """Devuelve el datetime con zona de Bogotá.
+
+    PostgreSQL devuelve fechas con zona. SQLite (pruebas) las devuelve sin zona: ahí
+    el valor es la hora de pared que se guardó, que siempre es hora de Bogotá.
+    Así el resultado no depende de la zona horaria de la máquina.
+    """
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=BOGOTA_TZ)
+    return dt.astimezone(BOGOTA_TZ)
+
 class BookingDomainService:
     def __init__(self, db: AsyncSession):
         self.repo = BookingRepository(db)
 
     def _to_schema(self, appt: AppointmentModel, cancel_min_hours: int = 2) -> AppointmentSchema:
         now_utc = datetime.now(timezone.utc)
-        appt_start = appt.start_time
-        if appt_start.tzinfo is None:
-            appt_start = appt_start.replace(tzinfo=timezone.utc)
+        appt_start = _como_bogota(appt.start_time)
 
         can_cancel = (
             appt.status in ["pending", "confirmed"]
             and (appt_start - now_utc) >= timedelta(hours=cancel_min_hours)
         )
 
-        checked_in = appt.checked_in_at
-        if checked_in is not None and checked_in.tzinfo is None:
-            checked_in = checked_in.replace(tzinfo=timezone.utc)
+        checked_in = _como_bogota(appt.checked_in_at) if appt.checked_in_at is not None else None
 
         return AppointmentSchema(
             id=appt.id,
@@ -62,7 +70,7 @@ class BookingDomainService:
             barber=BarberRef(id=appt.barber_id, name=appt.barber_name),
             items=[AppointmentItemSchema.model_validate(item) for item in appt.items],
             start=appt_start.isoformat(),
-            end=appt.end_time.replace(tzinfo=timezone.utc).isoformat() if appt.end_time.tzinfo is None else appt.end_time.isoformat(),
+            end=_como_bogota(appt.end_time).isoformat(),
             total_price=appt.total_price,
             status=appt.status,
             can_cancel=can_cancel,
@@ -246,16 +254,16 @@ class BookingDomainService:
                 has_appt_conflict = any(
                     a.status in ["pending", "confirmed"]
                     and (
-                        (a.start_time.astimezone(BOGOTA_TZ) < curr_slot_end)
-                        and (a.end_time.astimezone(BOGOTA_TZ) > curr_slot_start)
+                        (_como_bogota(a.start_time) < curr_slot_end)
+                        and (_como_bogota(a.end_time) > curr_slot_start)
                     )
                     for a in appts
                 )
 
                 # Check conflict with time-offs
                 has_time_off_conflict = any(
-                    (t.start_time.astimezone(BOGOTA_TZ) < curr_slot_end)
-                    and (t.end_time.astimezone(BOGOTA_TZ) > curr_slot_start)
+                    (_como_bogota(t.start_time) < curr_slot_end)
+                    and (_como_bogota(t.end_time) > curr_slot_start)
                     for t in time_offs
                 )
 
@@ -556,7 +564,7 @@ class BookingDomainService:
         for a in month_appts:
             if a.status not in revenue_statuses:
                 continue
-            day_key = a.start_time.astimezone(BOGOTA_TZ).date().isoformat()
+            day_key = _como_bogota(a.start_time).date().isoformat()
             revenue_per_day[day_key] = revenue_per_day.get(day_key, 0) + a.total_price
         revenue_by_day = [
             {"date": day, "total": total} for day, total in sorted(revenue_per_day.items())

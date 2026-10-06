@@ -36,7 +36,7 @@ class _CombosAdminPageState extends State<CombosAdminPage> {
     return (combos: combos, services: services);
   }
 
-  void _refresh() => setState(() => _future = _load());
+  void _refresh() => setState(() { _future = _load(); });
 
   Future<void> _toggleActive(Combo c) async {
     setState(() => _actionError = null);

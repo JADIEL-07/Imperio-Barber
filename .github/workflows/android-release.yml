@@ -1,0 +1,71 @@
+name: Android APK (release)
+
+# Publica flutter/ como APK firmado en GitHub Releases con nombre fijo (imperio-barber.apk),
+# que es lo que enlaza el botón "Descargar para Android" de ambas webs.
+# Uso: git tag v0.1.0 && git push origin v0.1.0   (o ejecutar a mano desde Actions)
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag de la release (ej. v0.1.0)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: flutter
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Dependencias
+        run: flutter pub get
+
+      - name: Firma (keystore desde secrets)
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.p12
+          {
+            echo "storePassword=$ANDROID_KEYSTORE_PASSWORD"
+            echo "keyPassword=$ANDROID_KEY_PASSWORD"
+            echo "keyAlias=$ANDROID_KEY_ALIAS"
+            echo "storeFile=upload-keystore.p12"
+          } > android/key.properties
+
+      - name: Build APK
+        run: >
+          flutter build apk --release
+          --build-name="${TAG#v}" --build-number="$GITHUB_RUN_NUMBER"
+          --dart-define=API_BASE_URL=https://flutter.imperio.newonline.digital/api
+        env:
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+
+      - name: Nombre fijo del archivo
+        run: cp build/app/outputs/flutter-apk/app-release.apk imperio-barber.apk
+
+      - name: Publicar release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          files: flutter/imperio-barber.apk
+          generate_release_notes: true

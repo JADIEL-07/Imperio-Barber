@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/api_client.dart';
@@ -57,7 +56,9 @@ class _BookingPageState extends State<BookingPage> {
         AsyncContent<_Catalog>(
           future: _future,
           loadingLabel: 'Cargando carta y maestros disponibles...',
-          onRetry: () => setState(() => _future = _load()),
+          onRetry: () => setState(() {
+            _future = _load();
+          }),
           builder: (catalog) {
             if (catalog.services.isEmpty && catalog.combos.isEmpty) {
               return const EmptyView(
@@ -468,7 +469,7 @@ class _BookingWizardState extends State<_BookingWizard> {
                   Text(fmtDateLong(start), style: const TextStyle(fontWeight: FontWeight.w700)),
                   Text(
                     fmtTimeRange(start, end),
-                    style: GoogleFonts.jetBrainsMono(color: AppColors.primary),
+                    style: AppFonts.mono(color: AppColors.primary),
                   ),
                 ],
               ),
