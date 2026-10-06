@@ -23,7 +23,7 @@ void main() {
 
       await tester.tap(find.text('Historial (1)'));
       await TestApp.settle(tester);
-      expect(find.text('Completada'), findsOneWidget);
+      expect(find.text('COMPLETADA'), findsOneWidget); // etiquetas en mayúsculas
       expect(find.text('Avisar que ya llegué'), findsNothing);
     });
 

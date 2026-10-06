@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui' show Size;
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
@@ -189,6 +190,13 @@ class TestApp {
 
   Future<void> pump(WidgetTester tester, {required String location}) async {
     AppFonts.useGoogleFonts = false;
+
+    // Pantalla alta: así los botones del final de cada flujo están visibles y se pueden tocar.
+    tester.view.devicePixelRatio = 1.0;
+    tester.view.physicalSize = const Size(800, 2400);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     if (sessionUser != null) {
       adapter.on('GET', '/auth/me', FakeResponse(200, sessionUser));
     }
