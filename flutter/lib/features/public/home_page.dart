@@ -32,7 +32,7 @@ class _HomePageState extends State<HomePage> {
     return (services: services.take(4).toList(), combos: combos.take(2).toList());
   }
 
-  void _reload() => setState(() => _future = _load());
+  void _reload() => setState(() { _future = _load(); });
 
   @override
   Widget build(BuildContext context) {

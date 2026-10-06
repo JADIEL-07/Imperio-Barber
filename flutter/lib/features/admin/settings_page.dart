@@ -27,7 +27,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _future = context.read<AppServices>().settings();
   }
 
-  void _reload() => setState(() => _future = context.read<AppServices>().settings());
+  void _reload() => setState(() { _future = context.read<AppServices>().settings(); });
 
   @override
   Widget build(BuildContext context) {

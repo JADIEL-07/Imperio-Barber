@@ -36,7 +36,7 @@ class _MyAppointmentsPageState extends State<MyAppointmentsPage> {
   Future<PageResponse<Appointment>> _load() =>
       context.read<AppServices>().appointments(scope: 'mine', pageSize: 50);
 
-  void _reload() => setState(() => _future = _load());
+  void _reload() => setState(() { _future = _load(); });
 
   Future<void> _cancel(Appointment appt) async {
     if (!appt.canCancel) {

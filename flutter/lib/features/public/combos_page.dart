@@ -24,7 +24,7 @@ class _CombosPageState extends State<CombosPage> {
     _future = context.read<AppServices>().combos();
   }
 
-  void _reload() => setState(() => _future = context.read<AppServices>().combos());
+  void _reload() => setState(() { _future = context.read<AppServices>().combos(); });
 
   @override
   Widget build(BuildContext context) {

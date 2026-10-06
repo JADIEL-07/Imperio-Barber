@@ -56,7 +56,9 @@ class _BookingPageState extends State<BookingPage> {
         AsyncContent<_Catalog>(
           future: _future,
           loadingLabel: 'Cargando carta y maestros disponibles...',
-          onRetry: () => setState(() => _future = _load()),
+          onRetry: () => setState(() {
+            _future = _load();
+          }),
           builder: (catalog) {
             if (catalog.services.isEmpty && catalog.combos.isEmpty) {
               return const EmptyView(

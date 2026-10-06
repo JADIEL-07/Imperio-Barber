@@ -47,7 +47,7 @@ class _AgendaPageState extends State<AgendaPage> {
     return page.items..sort((a, b) => DateTime.parse(a.start).compareTo(DateTime.parse(b.start)));
   }
 
-  void _refresh() => setState(() => _future = _load());
+  void _refresh() => setState(() { _future = _load(); });
 
   void _shift(int days) {
     setState(() {

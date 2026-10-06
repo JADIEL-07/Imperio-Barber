@@ -30,7 +30,7 @@ class _BarbersPageState extends State<BarbersPage> {
     _future = context.read<AppServices>().barbers();
   }
 
-  void _refresh() => setState(() => _future = context.read<AppServices>().barbers());
+  void _refresh() => setState(() { _future = context.read<AppServices>().barbers(); });
 
   Future<void> _editPhoto(Barber barber) async {
     await showDialog<void>(context: context, builder: (_) => _PhotoDialog(barber: barber));
@@ -304,7 +304,7 @@ class _CommissionDialogState extends State<_CommissionDialog> {
 
   Future<CommissionSummary> _loadSummary() => context.read<AppServices>().commissions(widget.barber.id);
 
-  void _reloadSummary() => setState(() => _summary = _loadSummary());
+  void _reloadSummary() => setState(() { _summary = _loadSummary(); });
 
   Future<void> _saveRate() async {
     final pct = double.tryParse(_rate.text.trim());

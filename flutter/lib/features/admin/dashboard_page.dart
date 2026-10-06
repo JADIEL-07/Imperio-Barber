@@ -28,7 +28,7 @@ class _DashboardPageState extends State<DashboardPage> {
     _future = context.read<AppServices>().stats();
   }
 
-  void _reload() => setState(() => _future = context.read<AppServices>().stats());
+  void _reload() => setState(() { _future = context.read<AppServices>().stats(); });
 
   @override
   Widget build(BuildContext context) {

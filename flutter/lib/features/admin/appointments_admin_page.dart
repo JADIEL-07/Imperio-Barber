@@ -55,7 +55,7 @@ class _AppointmentsAdminPageState extends State<AppointmentsAdminPage> {
     return (items: page.items, barbers: barbers);
   }
 
-  void _refresh() => setState(() => _future = _load());
+  void _refresh() => setState(() { _future = _load(); });
 
   Future<void> _pickDate({required bool isFrom}) async {
     final picked = await showDatePicker(
