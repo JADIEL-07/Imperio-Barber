@@ -1,0 +1,155 @@
+name: Desktop (Windows y Linux)
+
+# Compila flutter/ para escritorio y adjunta los instaladores a la misma GitHub Release que el APK:
+#  - Windows: imperio-barber-setup.exe (Inno Setup) e imperio-barber-windows.zip (portable)
+#  - Linux:   imperio-barber.deb (Debian/Ubuntu) e imperio-barber.AppImage (cualquier distro)
+# Uso: git tag v0.1.0 && git push origin v0.1.0   (o ejecutar a mano desde Actions)
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag de la release (ej. v0.1.0)"
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  TAG: ${{ github.event.inputs.tag || github.ref_name }}
+  API_BASE_URL: https://flutter.imperio.newonline.digital/api
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: flutter
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Generar proyecto Windows (si no existe flutter/windows)
+        run: flutter create --platforms=windows --org com.imperiobarber --project-name imperio_barber .
+
+      - name: Guardar flutter/windows generado (para commitearlo al repo)
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-windows-folder
+          path: flutter/windows
+
+      - name: Dependencias
+        run: flutter pub get
+
+      - name: Build Windows
+        run: >
+          flutter build windows --release
+          --build-name="${TAG#v}" --build-number="$GITHUB_RUN_NUMBER"
+          --dart-define=API_BASE_URL="$API_BASE_URL"
+
+      - name: Instalador (Inno Setup)
+        run: |
+          ISCC="$(command -v iscc || echo '/c/Program Files (x86)/Inno Setup 6/ISCC.exe')"
+          "$ISCC" "/DAppVersion=${TAG#v}" installers/windows.iss
+
+      - name: Zip portable
+        shell: pwsh
+        run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath dist/imperio-barber-windows.zip
+
+      - name: Publicar en la release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          files: |
+            flutter/dist/imperio-barber-setup.exe
+            flutter/dist/imperio-barber-windows.zip
+          generate_release_notes: true
+
+  linux:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: flutter
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Dependencias de compilación
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libfuse2
+
+      - name: Generar proyecto Linux (si no existe flutter/linux)
+        run: flutter create --platforms=linux --org com.imperiobarber --project-name imperio_barber .
+
+      - name: Guardar flutter/linux generado (para commitearlo al repo)
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-linux-folder
+          path: flutter/linux
+
+      - name: Dependencias
+        run: flutter pub get
+
+      - name: Build Linux
+        run: >
+          flutter build linux --release
+          --build-name="${TAG#v}" --build-number="$GITHUB_RUN_NUMBER"
+          --dart-define=API_BASE_URL="$API_BASE_URL"
+
+      - name: Paquete .deb
+        run: |
+          PKG=pkg/imperio-barber
+          mkdir -p dist "$PKG/DEBIAN" "$PKG/opt/imperio-barber" "$PKG/usr/bin" \
+                   "$PKG/usr/share/applications" "$PKG/usr/share/icons/hicolor/192x192/apps"
+          cp -r build/linux/x64/release/bundle/. "$PKG/opt/imperio-barber/"
+          ln -s /opt/imperio-barber/imperio_barber "$PKG/usr/bin/imperio-barber"
+          cp android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png \
+             "$PKG/usr/share/icons/hicolor/192x192/apps/imperio-barber.png"
+          cp installers/imperio-barber.desktop "$PKG/usr/share/applications/imperio-barber.desktop"
+          printf '%s\n' \
+            "Package: imperio-barber" \
+            "Version: ${TAG#v}" \
+            "Section: utils" \
+            "Priority: optional" \
+            "Architecture: amd64" \
+            "Depends: libgtk-3-0, libstdc++6" \
+            "Maintainer: Imperio Barber" \
+            "Description: Imperio Barber - reservas y gestion de la barberia" \
+            > "$PKG/DEBIAN/control"
+          dpkg-deb --build --root-owner-group "$PKG" dist/imperio-barber.deb
+
+      - name: AppImage
+        run: |
+          APPDIR=AppDir
+          mkdir -p "$APPDIR/usr/bin" "$APPDIR/usr/share/applications" "$APPDIR/usr/share/icons/hicolor/192x192/apps"
+          cp -r build/linux/x64/release/bundle/. "$APPDIR/usr/bin/"
+          cp installers/imperio-barber.desktop "$APPDIR/usr/share/applications/"
+          cp android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png \
+             "$APPDIR/usr/share/icons/hicolor/192x192/apps/imperio-barber.png"
+          curl -fsSL -o linuxdeploy https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          chmod +x linuxdeploy
+          ARCH=x86_64 ./linuxdeploy --appimage-extract-and-run --appdir "$APPDIR" \
+            -d "$APPDIR/usr/share/applications/imperio-barber.desktop" \
+            -i "$APPDIR/usr/share/icons/hicolor/192x192/apps/imperio-barber.png" \
+            --output appimage
+          mv Imperio_Barber*.AppImage dist/imperio-barber.AppImage
+
+      - name: Publicar en la release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          files: |
+            flutter/dist/imperio-barber.deb
+            flutter/dist/imperio-barber.AppImage
+          generate_release_notes: true
