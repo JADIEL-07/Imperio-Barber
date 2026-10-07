@@ -54,9 +54,12 @@ jobs:
           --dart-define=API_BASE_URL="$API_BASE_URL"
 
       - name: Instalador (Inno Setup)
+        shell: pwsh
         run: |
-          ISCC="$(command -v iscc || echo '/c/Program Files (x86)/Inno Setup 6/ISCC.exe')"
-          "$ISCC" "/DAppVersion=${TAG#v}" installers/windows.iss
+          choco install innosetup -y --no-progress
+          $version = $env:TAG.TrimStart('v')
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "/DAppVersion=$version" installers\windows.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Zip portable
         shell: pwsh
