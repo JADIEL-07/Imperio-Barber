@@ -1,8 +1,6 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
-import '../config/env.dart';
 import '../core/theme.dart';
 
 /// Marca de Imperio Barber: la misma estrella de 8 puntas que LogoMark en web.
