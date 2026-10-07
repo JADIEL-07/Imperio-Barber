@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Imperio Barber
+Comment=Reservas de Imperio Barber
+Exec=imperio_barber
+Icon=imperio-barber
+Terminal=false
+Type=Application
+Categories=Utility;
