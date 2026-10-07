@@ -15,6 +15,7 @@ import 'features/client/booking_page.dart';
 import 'features/client/my_appointments_page.dart';
 import 'features/client/profile_page.dart';
 import 'features/public/combos_page.dart';
+import 'features/public/downloads_page.dart';
 import 'features/public/home_page.dart';
 import 'features/public/services_page.dart';
 import 'shell/app_shell.dart';
@@ -31,6 +32,7 @@ final GoRouter appRouter = GoRouter(
         GoRoute(path: '/', builder: (_, _) => const HomePage()),
         GoRoute(path: '/servicios', builder: (_, _) => const ServicesPage()),
         GoRoute(path: '/combos', builder: (_, _) => const CombosPage()),
+        GoRoute(path: '/descargas', builder: (_, _) => const DownloadsPage()),
         GoRoute(
           path: '/login',
           builder: (_, state) => LoginPage(next: state.uri.queryParameters['next']),
