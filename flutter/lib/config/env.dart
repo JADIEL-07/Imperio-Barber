@@ -17,11 +17,15 @@ class Env {
     return 'https://flutter.imperio.newonline.digital/api';
   }
 
-  /// Última versión del APK publicada en GitHub Releases (nombre de archivo fijo).
-  static const String androidApkUrl =
-      'https://github.com/JADIEL-07/Imperio-Barber/releases/latest/download/imperio-barber.apk';
+  static const String _release = 'https://github.com/JADIEL-07/Imperio-Barber/releases/latest/download';
 
-  /// Última versión del IPA de iOS (sin firmar: se instala con AltStore/Sideloadly).
-  static const String iosIpaUrl =
-      'https://github.com/JADIEL-07/Imperio-Barber/releases/latest/download/imperio-barber-unsigned.ipa';
+  /// Última versión publicada en GitHub Releases (nombres de archivo fijos).
+  static const String androidApkUrl = '$_release/imperio-barber.apk';
+
+  /// IPA sin firmar: se instala con AltStore/Sideloadly.
+  static const String iosIpaUrl = '$_release/imperio-barber-unsigned.ipa';
+  static const String windowsSetupUrl = '$_release/imperio-barber-setup.exe';
+  static const String windowsZipUrl = '$_release/imperio-barber-windows.zip';
+  static const String linuxDebUrl = '$_release/imperio-barber.deb';
+  static const String linuxAppImageUrl = '$_release/imperio-barber.AppImage';
 }

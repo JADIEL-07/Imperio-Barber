@@ -61,4 +61,18 @@ void main() {
       expect(find.text(formatCop(80000)), findsOneWidget);
     });
   });
+
+  group('descargas de la app', () {
+    testWidgets('lista las cuatro plataformas con sus instaladores', (tester) async {
+      await TestApp(adapter: FakeAdapter()).pump(tester, location: '/descargas');
+
+      expect(find.text('Descargar la app'), findsOneWidget);
+      for (final platform in ['Android', 'iPhone / iPad', 'Windows', 'Linux']) {
+        expect(find.text(platform), findsOneWidget);
+      }
+      expect(find.text('Descargar APK'), findsOneWidget);
+      expect(find.text('Instalador (.exe)'), findsOneWidget);
+      expect(find.text('AppImage (cualquier distro)'), findsOneWidget);
+    });
+  });
 }

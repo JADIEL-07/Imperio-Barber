@@ -114,11 +114,11 @@ jobs:
         run: |
           PKG=pkg/imperio-barber
           mkdir -p dist "$PKG/DEBIAN" "$PKG/opt/imperio-barber" "$PKG/usr/bin" \
-                   "$PKG/usr/share/applications" "$PKG/usr/share/icons/hicolor/192x192/apps"
+                   "$PKG/usr/share/applications" "$PKG/usr/share/icons/hicolor/512x512/apps"
           cp -r build/linux/x64/release/bundle/. "$PKG/opt/imperio-barber/"
           ln -s /opt/imperio-barber/imperio_barber "$PKG/usr/bin/imperio-barber"
-          cp android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png \
-             "$PKG/usr/share/icons/hicolor/192x192/apps/imperio-barber.png"
+          cp installers/icon.png \
+             "$PKG/usr/share/icons/hicolor/512x512/apps/imperio-barber.png"
           cp installers/imperio-barber.desktop "$PKG/usr/share/applications/imperio-barber.desktop"
           printf '%s\n' \
             "Package: imperio-barber" \
@@ -135,16 +135,16 @@ jobs:
       - name: AppImage
         run: |
           APPDIR=AppDir
-          mkdir -p "$APPDIR/usr/bin" "$APPDIR/usr/share/applications" "$APPDIR/usr/share/icons/hicolor/192x192/apps"
+          mkdir -p "$APPDIR/usr/bin" "$APPDIR/usr/share/applications" "$APPDIR/usr/share/icons/hicolor/512x512/apps"
           cp -r build/linux/x64/release/bundle/. "$APPDIR/usr/bin/"
           cp installers/imperio-barber.desktop "$APPDIR/usr/share/applications/"
-          cp android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png \
-             "$APPDIR/usr/share/icons/hicolor/192x192/apps/imperio-barber.png"
+          cp installers/icon.png \
+             "$APPDIR/usr/share/icons/hicolor/512x512/apps/imperio-barber.png"
           curl -fsSL -o linuxdeploy https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
           chmod +x linuxdeploy
           ARCH=x86_64 ./linuxdeploy --appimage-extract-and-run --appdir "$APPDIR" \
             -d "$APPDIR/usr/share/applications/imperio-barber.desktop" \
-            -i "$APPDIR/usr/share/icons/hicolor/192x192/apps/imperio-barber.png" \
+            -i "$APPDIR/usr/share/icons/hicolor/512x512/apps/imperio-barber.png" \
             --output appimage
           mv Imperio_Barber*.AppImage dist/imperio-barber.AppImage
 
